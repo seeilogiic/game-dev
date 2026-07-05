@@ -1,0 +1,30 @@
+# Treat all Unity binary files as binary and disable delta compression
+*.png binary -delta
+*.jpg binary -delta
+*.jpeg binary -delta
+*.gif binary -delta
+*.psd binary -delta
+*.tga binary -delta
+*.tif binary -delta
+*.tiff binary -delta
+*.fbx binary -delta
+*.obj binary -delta
+*.mp3 binary -delta
+*.wav binary -delta
+*.ogg binary -delta
+*.pdf binary -delta
+*.unitypackage binary -delta
+*.exr binary -delta
+*.asset binary -delta
+*.prefab binary -delta
+*.unity binary -delta
+*.controller binary -delta
+*.anim binary -delta
+*.mat binary -delta
+
+# Text files
+*.cs text diff=csharp eol=lf
+*.shader text eol=lf
+*.json text eol=lf
+*.xml text eol=lf
+*.yaml text eol=lf
