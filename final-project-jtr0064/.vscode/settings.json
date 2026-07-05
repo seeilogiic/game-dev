@@ -67,6 +67,6 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "Final-Project-jtr0064.slnx",
+    "dotnet.defaultSolution": "final-project-jtr0064.slnx",
     "dotnet.enableWorkspaceBasedDevelopment": false
 }
