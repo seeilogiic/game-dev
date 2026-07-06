@@ -193,6 +193,7 @@ GameObject:
   - component: {fileID: 6419187236850804161}
   - component: {fileID: 2256188382494855856}
   - component: {fileID: 9086386761885402405}
+  - component: {fileID: 7282304971750967166}
   m_Layer: 0
   m_Name: PT_Fruit_Tree_01_apples
   m_TagString: Untagged
@@ -269,6 +270,24 @@ CapsuleCollider:
   m_Height: 1
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &7282304971750967166
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5935278547815300987}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6c58b3da71d24581a0ca5b571e18cf3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InteractableResource
+  resourceName: Apple
+  amountPerCollect: 1
+  usesRemaining: 1
+  promptText: Press E to interact
+  animationTrigger: PickFruit
+  destroyWhenEmpty: 1
 --- !u!1 &7513603357302551873
 GameObject:
   m_ObjectHideFlags: 0

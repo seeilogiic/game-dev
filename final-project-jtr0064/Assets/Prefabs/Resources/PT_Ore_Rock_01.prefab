@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 1324489145511453036}
   - component: {fileID: 6069612551507580445}
   - component: {fileID: 3918731520192939761}
+  - component: {fileID: 7291152761563336555}
   m_Layer: 0
   m_Name: PT_Ore_Rock_01
   m_TagString: Untagged
@@ -85,6 +86,24 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.29
   m_Center: {x: 0.06, y: 0.21, z: 0}
+--- !u!114 &7291152761563336555
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1813357942169304022}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6c58b3da71d24581a0ca5b571e18cf3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InteractableResource
+  resourceName: Ore
+  amountPerCollect: 1
+  usesRemaining: 1
+  promptText: Press E to interact
+  animationTrigger: GatherOre
+  destroyWhenEmpty: 1
 --- !u!1 &3513244448727352474
 GameObject:
   m_ObjectHideFlags: 0
