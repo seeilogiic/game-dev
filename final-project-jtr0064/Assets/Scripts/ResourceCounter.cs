@@ -5,13 +5,19 @@ public class ResourceCounter : MonoBehaviour
 {
     public TextMeshProUGUI appleText;
     public TextMeshProUGUI oreText;
+    public TextMeshProUGUI poppyText;
 
     private int apples;
     private int ores;
+    private int poppies;
+    private int totalApples;
+    private int totalOres;
+    private int totalPoppies;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        CalculateTotals();
         UpdateUI();
     }
 
@@ -21,10 +27,49 @@ public class ResourceCounter : MonoBehaviour
         
     }
 
+    private void CalculateTotals()
+    {
+        totalApples = 0;
+        totalOres = 0;
+        totalPoppies = 0;
+
+        InteractableResource[] resources = FindObjectsByType<InteractableResource>(FindObjectsInactive.Exclude);
+        foreach (InteractableResource resource in resources)
+        {
+            if (resource == null) continue;
+
+            string type = resource.resourceName.ToLower();
+            int amount = resource.usesRemaining * resource.amountPerCollect;
+
+            if (type == "apple")
+            {
+                totalApples += amount;
+            }
+            else if (type == "ore")
+            {
+                totalOres += amount;
+            }
+            else if (type == "poppy" || type == "poppies")
+            {
+                totalPoppies += amount;
+            }
+        }
+    }
+
     private void UpdateUI()
     {
-        appleText.text = "Apples: " + apples;
-        oreText.text = "Ores: " + ores;
+        if (appleText != null)
+        {
+            appleText.text = "Apples: " + apples + "/" + totalApples;
+        }
+        if (oreText != null)
+        {
+            oreText.text = "Ores: " + ores + "/" + totalOres;
+        }
+        if (poppyText != null)
+        {
+            poppyText.text = "Poppies: " + poppies + "/" + totalPoppies;
+        }
     }
 
     public void AddResource(string resourceType, int amount)
@@ -36,6 +81,10 @@ public class ResourceCounter : MonoBehaviour
                 break;
             case "ore":
                 ores += amount;
+                break;
+            case "poppy":
+            case "poppies":
+                poppies += amount;
                 break;
             default:
                 Debug.LogWarning("Unknown resource type: " + resourceType);
