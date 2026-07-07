@@ -15,7 +15,7 @@ public class InteractableResource : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        resourceCounter = FindAnyObjectByType<ResourceCounter>();
+        resourceCounter = FindObjectOfType<ResourceCounter>();
     }
 
     public void Interact()

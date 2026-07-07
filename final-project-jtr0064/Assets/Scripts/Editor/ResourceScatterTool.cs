@@ -39,6 +39,16 @@ public class ResourceScatterTool : EditorWindow
             true
         );
 
+        if (parentObject == null) {
+            EditorGUILayout.HelpBox("No Parent Object assigned. Note: The minimum distance check will not work unless a parent is assigned to group and check the resources.", MessageType.Info);
+            if (GUILayout.Button("Create & Assign New Parent")) {
+                string parentName = prefabToScatter != null ? "Scattered_" + prefabToScatter.name : "ScatteredResources";
+                GameObject newParent = new GameObject(parentName);
+                Undo.RegisterCreatedObjectUndo(newParent, "Create Parent Object");
+                parentObject = newParent.transform;
+            }
+        }
+
         amount = EditorGUILayout.IntField("Amount", amount);
         minDistance = EditorGUILayout.FloatField("Minimum Distance", minDistance);
 
@@ -51,6 +61,17 @@ public class ResourceScatterTool : EditorWindow
         if (targetTerrain == null || prefabToScatter == null) {
             Debug.LogError("Please assign both a target terrain and a prefab to scatter.");
             return;
+        }
+
+        if (parentObject == null) {
+            string parentName = "Scattered_" + prefabToScatter.name;
+            GameObject defaultParent = GameObject.Find(parentName);
+            if (defaultParent == null) {
+                defaultParent = new GameObject(parentName);
+                Undo.RegisterCreatedObjectUndo(defaultParent, "Create " + parentName + " Parent");
+            }
+            parentObject = defaultParent.transform;
+            Debug.Log("Automatically created and assigned parent object: " + parentName);
         }
 
         TerrainData terrainData = targetTerrain.terrainData;

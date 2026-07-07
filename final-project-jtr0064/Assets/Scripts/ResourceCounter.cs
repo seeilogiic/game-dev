@@ -33,7 +33,7 @@ public class ResourceCounter : MonoBehaviour
         totalOres = 0;
         totalPoppies = 0;
 
-        InteractableResource[] resources = FindObjectsByType<InteractableResource>(FindObjectsInactive.Exclude);
+        InteractableResource[] resources = FindObjectsOfType<InteractableResource>();
         foreach (InteractableResource resource in resources)
         {
             if (resource == null) continue;
