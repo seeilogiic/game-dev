@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using TMPro;
 using UnityEngine.InputSystem;
@@ -8,7 +9,16 @@ public class PlayerInteraction : MonoBehaviour
 
     public float interactionRange = 3f;
     public TextMeshProUGUI promptText;
-    
+    [Tooltip("Container holding the prompt's keycap + label. When assigned, this is what gets shown/hidden instead of promptText.gameObject directly.")]
+    [SerializeField] private GameObject promptRoot;
+    [Tooltip("Radial (Filled/Radial360) Image that visualizes gather progress, 0 to 1.")]
+    public Image gatherProgressImage;
+
+    [Tooltip("Safety cap while waiting for the animator to enter the pickup/gather state, in case the trigger name doesn't match any state.")]
+    [SerializeField] private float enterStateTimeout = 2f;
+    [Tooltip("Used only when there is no animator or no animation trigger set on the resource.")]
+    [SerializeField] private float fallbackDuration = 1f;
+
     private InteractableResource currentResource;
     private Animator animator;
     private bool isInteracting;
@@ -17,8 +27,23 @@ public class PlayerInteraction : MonoBehaviour
     {
         animator = GetComponentInChildren<Animator>();
 
-        if (promptText != null) {
-            promptText.gameObject.SetActive(false);
+        SetPromptVisible(false);
+
+        if (gatherProgressImage != null) {
+            gatherProgressImage.fillAmount = 0f;
+            gatherProgressImage.gameObject.SetActive(false);
+        }
+    }
+
+    // The prompt is a keycap + label under promptRoot when the setup tool has wired one up;
+    // otherwise fall back to toggling promptText.gameObject directly so this still works
+    // before the tool has been run.
+    private void SetPromptVisible(bool visible)
+    {
+        if (promptRoot != null) {
+            promptRoot.SetActive(visible);
+        } else if (promptText != null) {
+            promptText.gameObject.SetActive(visible);
         }
     }
 
@@ -55,10 +80,10 @@ public class PlayerInteraction : MonoBehaviour
         }
 
         if (currentResource != null && !isInteracting) {
-            promptText.text = "Press E to interact";
-            promptText.gameObject.SetActive(true);
+            promptText.text = "gather " + currentResource.resourceName;
+            SetPromptVisible(true);
         } else {
-            promptText.gameObject.SetActive(false);
+            SetPromptVisible(false);
         }
     }
 
@@ -79,21 +104,62 @@ public class PlayerInteraction : MonoBehaviour
     {
         isInteracting = true;
 
-        if (promptText != null) {
-            promptText.gameObject.SetActive(false);
+        // Snapshot the resource/trigger so this pickup isn't affected by currentResource
+        // changing (e.g. the player moving near a different resource) while it plays out.
+        InteractableResource resource = currentResource;
+        string trigger = resource != null ? resource.animationTrigger : null;
+
+        SetPromptVisible(false);
+
+        if (gatherProgressImage != null) {
+            gatherProgressImage.fillAmount = 0f;
+            gatherProgressImage.gameObject.SetActive(true);
         }
 
-        if (animator != null && !string.IsNullOrEmpty(currentResource.animationTrigger)) {
-            animator.SetTrigger(currentResource.animationTrigger);
+        if (animator != null && !string.IsNullOrEmpty(trigger)) {
+            animator.SetTrigger(trigger);
+
+            // Wait for the animator to actually enter the pickup/gather state (it may take
+            // a frame or two), with a timeout so a mismatched trigger/state name can never
+            // lock the player out of interacting permanently.
+            float elapsed = 0f;
+            while (!animator.GetCurrentAnimatorStateInfo(0).IsName(trigger) && elapsed < enterStateTimeout) {
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+
+            // Wait for that state to fully finish playing (normalizedTime reaches 1),
+            // so the next pickup can't start until this animation has completely played out.
+            // The gather timer just visualizes this same normalizedTime as it climbs to 1.
+            while (animator.GetCurrentAnimatorStateInfo(0).IsName(trigger)
+                   && animator.GetCurrentAnimatorStateInfo(0).normalizedTime < 1f) {
+                if (gatherProgressImage != null) {
+                    gatherProgressImage.fillAmount = Mathf.Clamp01(animator.GetCurrentAnimatorStateInfo(0).normalizedTime);
+                }
+                yield return null;
+            }
+        } else {
+            // No animator/trigger to drive off of - fall back to a fixed duration, but still
+            // tick the gather timer up over that duration instead of just blocking blindly.
+            float elapsed = 0f;
+            while (elapsed < fallbackDuration) {
+                elapsed += Time.deltaTime;
+                if (gatherProgressImage != null) {
+                    gatherProgressImage.fillAmount = Mathf.Clamp01(elapsed / fallbackDuration);
+                }
+                yield return null;
+            }
         }
 
-        yield return new WaitForSeconds(0.8f);
-
-        if (currentResource != null) {
-            currentResource.Interact();
+        if (gatherProgressImage != null) {
+            gatherProgressImage.fillAmount = 0f;
+            gatherProgressImage.gameObject.SetActive(false);
         }
 
-        yield return new WaitForSeconds(0.3f);
+        if (resource != null) {
+            resource.Interact();
+        }
+
         isInteracting = false;
     }
 }
