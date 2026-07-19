@@ -8,8 +8,12 @@ public class UpgradeMenuUI : MonoBehaviour
     public GameObject panelRoot;
     public TextMeshProUGUI speedLabel;
     public TextMeshProUGUI gatherLabel;
+    public TextMeshProUGUI gatherSpeedLabel;
+    public TextMeshProUGUI autoCollectLabel;
     public Button upgradeSpeedButton;
     public Button upgradeGatherButton;
+    public Button upgradeGatherSpeedButton;
+    public Button unlockAutoCollectButton;
 
     public PlayerUpgrades playerUpgrades;
     public ThirdPersonController controller;
@@ -25,6 +29,14 @@ public class UpgradeMenuUI : MonoBehaviour
 
         if (upgradeGatherButton != null) {
             upgradeGatherButton.onClick.AddListener(OnUpgradeGatherClicked);
+        }
+
+        if (upgradeGatherSpeedButton != null) {
+            upgradeGatherSpeedButton.onClick.AddListener(OnUpgradeGatherSpeedClicked);
+        }
+
+        if (unlockAutoCollectButton != null) {
+            unlockAutoCollectButton.onClick.AddListener(OnUnlockAutoCollectClicked);
         }
 
         if (panelRoot != null) {
@@ -81,6 +93,26 @@ public class UpgradeMenuUI : MonoBehaviour
         RefreshUI();
     }
 
+    private void OnUpgradeGatherSpeedClicked()
+    {
+        if (playerUpgrades == null) {
+            return;
+        }
+
+        playerUpgrades.UpgradeGatherSpeed();
+        RefreshUI();
+    }
+
+    private void OnUnlockAutoCollectClicked()
+    {
+        if (playerUpgrades == null) {
+            return;
+        }
+
+        playerUpgrades.UnlockAutoCollect();
+        RefreshUI();
+    }
+
     private void RefreshUI()
     {
         if (playerUpgrades == null || controller == null) {
@@ -93,11 +125,28 @@ public class UpgradeMenuUI : MonoBehaviour
                 " / Sprint " + controller.SprintSpeed.ToString("F1") + ")";
         }
 
+        PlayerInteraction interaction = playerUpgrades.GetComponent<PlayerInteraction>();
+
         if (gatherLabel != null) {
-            PlayerInteraction interaction = playerUpgrades.GetComponent<PlayerInteraction>();
             float range = interaction != null ? interaction.interactionRange : 0f;
             gatherLabel.text = "Gather Distance Lv. " + playerUpgrades.gatherLevel +
                 "  (" + range.ToString("F1") + "m)";
+        }
+
+        if (gatherSpeedLabel != null) {
+            float multiplier = interaction != null ? interaction.gatherSpeedMultiplier : 1f;
+            gatherSpeedLabel.text = "Gather Speed Lv. " + playerUpgrades.gatherSpeedLevel +
+                "  (" + multiplier.ToString("F2") + "x)";
+        }
+
+        bool autoCollectUnlocked = playerUpgrades.autoCollectLevel > 0;
+
+        if (autoCollectLabel != null) {
+            autoCollectLabel.text = "Auto-Collect: " + (autoCollectUnlocked ? "Unlocked" : "Locked");
+        }
+
+        if (unlockAutoCollectButton != null) {
+            unlockAutoCollectButton.interactable = !autoCollectUnlocked;
         }
     }
 }

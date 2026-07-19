@@ -8,11 +8,15 @@ public class PlayerInteraction : MonoBehaviour
 {
 
     public float interactionRange = 3f;
+    [Tooltip("Multiplies the gather animation's playback speed. 1 = normal speed.")]
+    public float gatherSpeedMultiplier = 1f;
     public TextMeshProUGUI promptText;
     [Tooltip("Container holding the prompt's keycap + label. When assigned, this is what gets shown/hidden instead of promptText.gameObject directly.")]
     [SerializeField] private GameObject promptRoot;
     [Tooltip("Radial (Filled/Radial360) Image that visualizes gather progress, 0 to 1.")]
     public Image gatherProgressImage;
+    [Tooltip("Shows a brief 'Gathered {item}' message after any gather, manual or Auto-Collect.")]
+    public GatherPopupUI gatherPopup;
 
     [Tooltip("Safety cap while waiting for the animator to enter the pickup/gather state, in case the trigger name doesn't match any state.")]
     [SerializeField] private float enterStateTimeout = 2f;
@@ -117,6 +121,10 @@ public class PlayerInteraction : MonoBehaviour
         }
 
         if (animator != null && !string.IsNullOrEmpty(trigger)) {
+            // Gather Speed upgrades raise this multiplier; since everything below waits on
+            // normalizedTime rather than a fixed timer, speeding up the clip here speeds up
+            // the whole gather (and its progress radial) proportionally.
+            animator.speed = Mathf.Max(0.01f, gatherSpeedMultiplier);
             animator.SetTrigger(trigger);
 
             // Wait for the animator to actually enter the pickup/gather state (it may take
@@ -138,14 +146,19 @@ public class PlayerInteraction : MonoBehaviour
                 }
                 yield return null;
             }
+
+            // Restore normal playback speed so locomotion/other animations aren't affected.
+            animator.speed = 1f;
         } else {
-            // No animator/trigger to drive off of - fall back to a fixed duration, but still
-            // tick the gather timer up over that duration instead of just blocking blindly.
+            // No animator/trigger to drive off of - fall back to a fixed duration (scaled by
+            // the same Gather Speed multiplier), but still tick the gather timer up over that
+            // duration instead of just blocking blindly.
+            float duration = fallbackDuration / Mathf.Max(0.01f, gatherSpeedMultiplier);
             float elapsed = 0f;
-            while (elapsed < fallbackDuration) {
+            while (elapsed < duration) {
                 elapsed += Time.deltaTime;
                 if (gatherProgressImage != null) {
-                    gatherProgressImage.fillAmount = Mathf.Clamp01(elapsed / fallbackDuration);
+                    gatherProgressImage.fillAmount = Mathf.Clamp01(elapsed / duration);
                 }
                 yield return null;
             }
@@ -157,9 +170,18 @@ public class PlayerInteraction : MonoBehaviour
         }
 
         if (resource != null) {
+            string resourceName = resource.resourceName;
             resource.Interact();
+            ShowGatherPopup(resourceName);
         }
 
         isInteracting = false;
+    }
+
+    public void ShowGatherPopup(string resourceName)
+    {
+        if (gatherPopup != null) {
+            gatherPopup.Show(resourceName);
+        }
     }
 }

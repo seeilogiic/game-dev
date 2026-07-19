@@ -68,6 +68,23 @@ public class GatheringUISetupTool : EditorWindow
         gatherProgressImage.color = Color.white;
         progressRect.gameObject.SetActive(false);
 
+        // Screen-center "Gathered {item}" popup, sitting just above the gather timer so the
+        // two never overlap.
+        RectTransform popupRect = GetOrCreateChild(canvas.transform, "GatherPopup");
+        popupRect.anchorMin = new Vector2(0.5f, 0.5f);
+        popupRect.anchorMax = new Vector2(0.5f, 0.5f);
+        popupRect.pivot = new Vector2(0.5f, 0.5f);
+        popupRect.sizeDelta = new Vector2(320f, 40f);
+        popupRect.anchoredPosition = new Vector2(0f, 90f);
+
+        TextMeshProUGUI popupText = GetOrAddComponent<TextMeshProUGUI>(popupRect.gameObject);
+        popupText.fontSize = 22;
+        popupText.fontStyle = FontStyles.Bold;
+        popupText.color = Color.white;
+        popupText.alignment = TextAlignmentOptions.Center;
+
+        GatherPopupUI gatherPopup = GetOrAddComponent<GatherPopupUI>(popupRect.gameObject);
+
         // Bottom-center "[E] gather {item}" prompt.
         RectTransform gatherPromptRect = GetOrCreateChild(canvas.transform, "GatherPrompt");
         gatherPromptRect.anchorMin = new Vector2(0.5f, 0f);
@@ -122,16 +139,22 @@ public class GatheringUISetupTool : EditorWindow
             oldPrompt.gameObject.SetActive(false);
         }
 
+        SerializedObject serializedPopup = new SerializedObject(gatherPopup);
+        serializedPopup.FindProperty("popupText").objectReferenceValue = popupText;
+        serializedPopup.ApplyModifiedProperties();
+
         SerializedObject serializedInteraction = new SerializedObject(playerInteraction);
         serializedInteraction.FindProperty("gatherProgressImage").objectReferenceValue = gatherProgressImage;
+        serializedInteraction.FindProperty("gatherPopup").objectReferenceValue = gatherPopup;
         serializedInteraction.FindProperty("promptText").objectReferenceValue = gatherLabel;
         serializedInteraction.FindProperty("promptRoot").objectReferenceValue = gatherPrompt;
         serializedInteraction.ApplyModifiedProperties();
 
         EditorUtility.SetDirty(playerInteraction);
+        EditorUtility.SetDirty(gatherPopup);
         EditorSceneManager.MarkSceneDirty(playerInteraction.gameObject.scene);
 
-        Debug.Log("Gathering UI setup complete: screen-center gather timer, bottom-center \"[E] gather {item}\" prompt, and bottom-right \"[M] Menu\" hint are wired up. Tune sprite/colors/positions to taste, then save the scene.");
+        Debug.Log("Gathering UI setup complete: screen-center gather timer, \"Gathered {item}\" popup, bottom-center \"[E] gather {item}\" prompt, and bottom-right \"[M] Menu\" hint are wired up. Tune sprite/colors/positions to taste, then save the scene.");
     }
 
     private GameObject CreateKeycap(Transform parent, string name, string letter, Vector2 anchoredPosition) {

@@ -67,7 +67,7 @@ public class UpgradeMenuSetupTool : EditorWindow
         panelRect.anchorMin = new Vector2(0.5f, 0.5f);
         panelRect.anchorMax = new Vector2(0.5f, 0.5f);
         panelRect.pivot = new Vector2(0.5f, 0.5f);
-        panelRect.sizeDelta = new Vector2(360f, 220f);
+        panelRect.sizeDelta = new Vector2(360f, 340f);
         panelRect.anchoredPosition = Vector2.zero;
 
         Image panelImage = GetOrAddComponent<Image>(panel);
@@ -94,12 +94,22 @@ public class UpgradeMenuSetupTool : EditorWindow
         TextMeshProUGUI gatherLabel = CreateLabel(panelRect, "GatherLabel", new Vector2(-85f, -30f));
         Button gatherButton = CreateButton(panelRect, "GatherButton", "Upgrade Gather Distance", new Vector2(110f, -30f));
 
+        TextMeshProUGUI gatherSpeedLabel = CreateLabel(panelRect, "GatherSpeedLabel", new Vector2(-85f, -80f));
+        Button gatherSpeedButton = CreateButton(panelRect, "GatherSpeedButton", "Upgrade Gather Speed", new Vector2(110f, -80f));
+
+        TextMeshProUGUI autoCollectLabel = CreateLabel(panelRect, "AutoCollectLabel", new Vector2(-85f, -130f));
+        Button autoCollectButton = CreateButton(panelRect, "AutoCollectButton", "Unlock Auto-Collect", new Vector2(110f, -130f));
+
         SerializedObject serializedMenu = new SerializedObject(menuUI);
         serializedMenu.FindProperty("panelRoot").objectReferenceValue = panel;
         serializedMenu.FindProperty("speedLabel").objectReferenceValue = speedLabel;
         serializedMenu.FindProperty("gatherLabel").objectReferenceValue = gatherLabel;
+        serializedMenu.FindProperty("gatherSpeedLabel").objectReferenceValue = gatherSpeedLabel;
+        serializedMenu.FindProperty("autoCollectLabel").objectReferenceValue = autoCollectLabel;
         serializedMenu.FindProperty("upgradeSpeedButton").objectReferenceValue = speedButton;
         serializedMenu.FindProperty("upgradeGatherButton").objectReferenceValue = gatherButton;
+        serializedMenu.FindProperty("upgradeGatherSpeedButton").objectReferenceValue = gatherSpeedButton;
+        serializedMenu.FindProperty("unlockAutoCollectButton").objectReferenceValue = autoCollectButton;
         serializedMenu.FindProperty("playerUpgrades").objectReferenceValue = playerUpgrades;
         serializedMenu.FindProperty("controller").objectReferenceValue = controller;
         serializedMenu.FindProperty("starterInputs").objectReferenceValue = starterInputs;
