@@ -23,10 +23,17 @@ public class PlayerUpgrades : MonoBehaviour
     public float autoCollectLevel1Cooldown = 30f;
     public float autoCollectLevel10Cooldown = 5f;
 
+    [Header("Highlight - locked until level 1; cooldown shrinks and active duration grows evenly from level 1 to level 10; stays on permanently at level 10")]
+    public float highlightLevel1Cooldown = 60f;
+    public float highlightLevel10Cooldown = 10f;
+    public float highlightLevel1Duration = 2f;
+    public float highlightLevel10Duration = 10f;
+
     public int speedLevel;
     public int gatherLevel;
     public int gatherSpeedLevel;
     public int autoCollectLevel;
+    public int highlightLevel;
 
     private float baseMoveSpeed;
     private float baseSprintSpeed;
@@ -69,6 +76,7 @@ public class PlayerUpgrades : MonoBehaviour
     public int GetNextGatherCost() => GetUpgradeCost(gatherLevel);
     public int GetNextGatherSpeedCost() => GetUpgradeCost(gatherSpeedLevel);
     public int GetNextAutoCollectCost() => GetUpgradeCost(autoCollectLevel);
+    public int GetNextHighlightCost() => GetUpgradeCost(highlightLevel);
 
     public bool UpgradeSpeed()
     {
@@ -114,6 +122,17 @@ public class PlayerUpgrades : MonoBehaviour
         }
 
         autoCollectLevel++;
+        return true;
+    }
+
+    public bool UpgradeHighlight()
+    {
+        if (points == null || highlightLevel >= maxLevel
+            || !points.TrySpend(GetUpgradeCost(highlightLevel))) {
+            return false;
+        }
+
+        highlightLevel++;
         return true;
     }
 
@@ -173,6 +192,31 @@ public class PlayerUpgrades : MonoBehaviour
 
         float t = (autoCollectLevel - 1) / (float)(maxLevel - 1);
         return Mathf.Lerp(autoCollectLevel1Cooldown, autoCollectLevel10Cooldown, t);
+    }
+
+    // Shrinks evenly from highlightLevel1Cooldown (level 1) to highlightLevel10Cooldown
+    // (level 10). Unused at level 10 since the highlight is simply left on permanently.
+    public float GetHighlightCooldown()
+    {
+        if (highlightLevel <= 0) {
+            return highlightLevel1Cooldown;
+        }
+
+        float t = (highlightLevel - 1) / (float)(maxLevel - 1);
+        return Mathf.Lerp(highlightLevel1Cooldown, highlightLevel10Cooldown, t);
+    }
+
+    // Grows evenly from highlightLevel1Duration (level 1) to highlightLevel10Duration
+    // (level 10); at level 10 PlayerAbilities ignores this and leaves the highlight on
+    // permanently instead of timing it out.
+    public float GetHighlightDuration()
+    {
+        if (highlightLevel <= 0) {
+            return highlightLevel1Duration;
+        }
+
+        float t = (highlightLevel - 1) / (float)(maxLevel - 1);
+        return Mathf.Lerp(highlightLevel1Duration, highlightLevel10Duration, t);
     }
 
     public void OnToggleMenu(InputValue value)

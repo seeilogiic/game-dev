@@ -68,7 +68,7 @@ public class UpgradeMenuSetupTool : EditorWindow
         panelRect.anchorMin = new Vector2(0.5f, 0.5f);
         panelRect.anchorMax = new Vector2(0.5f, 0.5f);
         panelRect.pivot = new Vector2(0.5f, 0.5f);
-        panelRect.sizeDelta = new Vector2(360f, 340f);
+        panelRect.sizeDelta = new Vector2(360f, 410f);
         panelRect.anchoredPosition = Vector2.zero;
 
         Image panelImage = GetOrAddComponent<Image>(panel);
@@ -113,6 +113,9 @@ public class UpgradeMenuSetupTool : EditorWindow
         TextMeshProUGUI autoCollectLabel = CreateLabel(panelRect, "AutoCollectLabel", new Vector2(-85f, -130f));
         Button autoCollectButton = CreateButton(panelRect, "AutoCollectButton", "Unlock Auto-Collect", new Vector2(110f, -130f));
 
+        TextMeshProUGUI highlightLabel = CreateLabel(panelRect, "HighlightLabel", new Vector2(-85f, -180f));
+        Button highlightButton = CreateButton(panelRect, "HighlightButton", "Unlock Highlight", new Vector2(110f, -180f));
+
         SerializedObject serializedMenu = new SerializedObject(menuUI);
         serializedMenu.FindProperty("panelRoot").objectReferenceValue = panel;
         serializedMenu.FindProperty("pointsLabel").objectReferenceValue = pointsLabel;
@@ -120,10 +123,12 @@ public class UpgradeMenuSetupTool : EditorWindow
         serializedMenu.FindProperty("gatherLabel").objectReferenceValue = gatherLabel;
         serializedMenu.FindProperty("gatherSpeedLabel").objectReferenceValue = gatherSpeedLabel;
         serializedMenu.FindProperty("autoCollectLabel").objectReferenceValue = autoCollectLabel;
+        serializedMenu.FindProperty("highlightLabel").objectReferenceValue = highlightLabel;
         serializedMenu.FindProperty("upgradeSpeedButton").objectReferenceValue = speedButton;
         serializedMenu.FindProperty("upgradeGatherButton").objectReferenceValue = gatherButton;
         serializedMenu.FindProperty("upgradeGatherSpeedButton").objectReferenceValue = gatherSpeedButton;
         serializedMenu.FindProperty("unlockAutoCollectButton").objectReferenceValue = autoCollectButton;
+        serializedMenu.FindProperty("unlockHighlightButton").objectReferenceValue = highlightButton;
         serializedMenu.FindProperty("playerUpgrades").objectReferenceValue = playerUpgrades;
         serializedMenu.FindProperty("playerPoints").objectReferenceValue = playerPoints;
         serializedMenu.FindProperty("controller").objectReferenceValue = controller;

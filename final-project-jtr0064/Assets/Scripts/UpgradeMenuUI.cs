@@ -11,10 +11,12 @@ public class UpgradeMenuUI : MonoBehaviour
     public TextMeshProUGUI gatherLabel;
     public TextMeshProUGUI gatherSpeedLabel;
     public TextMeshProUGUI autoCollectLabel;
+    public TextMeshProUGUI highlightLabel;
     public Button upgradeSpeedButton;
     public Button upgradeGatherButton;
     public Button upgradeGatherSpeedButton;
     public Button unlockAutoCollectButton;
+    public Button unlockHighlightButton;
 
     public PlayerUpgrades playerUpgrades;
     public PlayerPoints playerPoints;
@@ -39,6 +41,10 @@ public class UpgradeMenuUI : MonoBehaviour
 
         if (unlockAutoCollectButton != null) {
             unlockAutoCollectButton.onClick.AddListener(OnUnlockAutoCollectClicked);
+        }
+
+        if (unlockHighlightButton != null) {
+            unlockHighlightButton.onClick.AddListener(OnUnlockHighlightClicked);
         }
 
         if (panelRoot != null) {
@@ -112,6 +118,16 @@ public class UpgradeMenuUI : MonoBehaviour
         }
 
         playerUpgrades.UpgradeAutoCollect();
+        RefreshUI();
+    }
+
+    private void OnUnlockHighlightClicked()
+    {
+        if (playerUpgrades == null) {
+            return;
+        }
+
+        playerUpgrades.UpgradeHighlight();
         RefreshUI();
     }
 
@@ -192,6 +208,30 @@ public class UpgradeMenuUI : MonoBehaviour
 
         if (unlockAutoCollectButton != null) {
             unlockAutoCollectButton.interactable = !autoCollectMaxed && points >= autoCollectCost;
+        }
+
+        bool highlightUnlocked = playerUpgrades.highlightLevel > 0;
+        bool highlightMaxed = playerUpgrades.highlightLevel >= maxLevel;
+        int highlightCost = playerUpgrades.GetNextHighlightCost();
+
+        if (highlightLabel != null) {
+            string status;
+            if (!highlightUnlocked) {
+                status = "Locked";
+            } else if (highlightMaxed) {
+                status = "always on";
+            } else {
+                status = playerUpgrades.GetHighlightDuration().ToString("F0") + "s active, " +
+                    playerUpgrades.GetHighlightCooldown().ToString("F0") + "s cooldown";
+            }
+
+            highlightLabel.text = "Highlight Lv. " + playerUpgrades.highlightLevel + "/" + maxLevel +
+                "  (" + status + ")" +
+                (highlightMaxed ? "  - MAX" : "  - " + highlightCost + " pts");
+        }
+
+        if (unlockHighlightButton != null) {
+            unlockHighlightButton.interactable = !highlightMaxed && points >= highlightCost;
         }
     }
 }

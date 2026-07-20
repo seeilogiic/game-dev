@@ -22,7 +22,7 @@ public class AbilityBarSetupTool : EditorWindow
     }
 
     private void OnGUI() {
-        GUILayout.Label("Setup Ability Bar (1 key = Auto-Collect)", EditorStyles.boldLabel);
+        GUILayout.Label("Setup Ability Bar (1 = Auto-Collect, 2 = Highlight)", EditorStyles.boldLabel);
 
         targetCanvas = (Canvas)EditorGUILayout.ObjectField(
             "Target Canvas",
@@ -53,14 +53,37 @@ public class AbilityBarSetupTool : EditorWindow
         GameObject playerObject = playerInteraction.gameObject;
         PlayerAbilities abilities = GetOrAddComponent<PlayerAbilities>(playerObject);
 
-        // Bottom-left, clear of the bottom-center "[E] gather" prompt and the bottom-right menu hint.
-        RectTransform slotRect = GetOrCreateChild(canvas.transform, "AbilitySlot1");
+        // Bottom-left, clear of the bottom-center "[E] gather" prompt and the bottom-right
+        // menu hint. Slots sit side by side, left to right, 8px apart.
+        const float slotSize = 64f;
+        const float gap = 8f;
+        Image slot1Cooldown = BuildSlot(canvas.transform, "AbilitySlot1", "1", new Vector2(20f, 30f), out GameObject slot1Locked);
+        Image slot2Cooldown = BuildSlot(canvas.transform, "AbilitySlot2", "2", new Vector2(20f + slotSize + gap, 30f), out GameObject slot2Locked);
+
+        SerializedObject serializedAbilities = new SerializedObject(abilities);
+        serializedAbilities.FindProperty("autoCollectCooldownFill").objectReferenceValue = slot1Cooldown;
+        serializedAbilities.FindProperty("autoCollectLockedOverlay").objectReferenceValue = slot1Locked;
+        serializedAbilities.FindProperty("highlightCooldownFill").objectReferenceValue = slot2Cooldown;
+        serializedAbilities.FindProperty("highlightLockedOverlay").objectReferenceValue = slot2Locked;
+        serializedAbilities.ApplyModifiedProperties();
+
+        EditorUtility.SetDirty(abilities);
+        EditorSceneManager.MarkSceneDirty(playerObject.scene);
+
+        Debug.Log("Ability bar setup complete. Press 1 for Auto-Collect, 2 for Highlight, once each is unlocked.");
+    }
+
+    // Builds one ability slot (backing image, keycap label, radial cooldown fill, locked
+    // overlay) and returns its cooldown Image (plus the locked overlay via out) so the
+    // caller can wire both into PlayerAbilities.
+    private Image BuildSlot(Transform canvasTransform, string slotName, string keycap, Vector2 anchoredPosition, out GameObject lockedOverlay) {
+        RectTransform slotRect = GetOrCreateChild(canvasTransform, slotName);
         GameObject slot = slotRect.gameObject;
         slotRect.anchorMin = new Vector2(0f, 0f);
         slotRect.anchorMax = new Vector2(0f, 0f);
         slotRect.pivot = new Vector2(0f, 0f);
         slotRect.sizeDelta = new Vector2(64f, 64f);
-        slotRect.anchoredPosition = new Vector2(20f, 30f);
+        slotRect.anchoredPosition = anchoredPosition;
 
         Image slotImage = GetOrAddComponent<Image>(slot);
         slotImage.color = new Color(1f, 1f, 1f, 0.15f);
@@ -73,7 +96,7 @@ public class AbilityBarSetupTool : EditorWindow
         keycapRect.anchoredPosition = new Vector2(4f, -4f);
 
         TextMeshProUGUI keycapText = GetOrAddComponent<TextMeshProUGUI>(keycapRect.gameObject);
-        keycapText.text = "1";
+        keycapText.text = keycap;
         keycapText.fontSize = 14;
         keycapText.color = Color.white;
         keycapText.alignment = TextAlignmentOptions.Center;
@@ -99,7 +122,7 @@ public class AbilityBarSetupTool : EditorWindow
         cooldownImage.fillAmount = 0f;
         cooldownRect.gameObject.SetActive(false);
 
-        // Dims the slot and shows "Locked" until Auto-Collect is purchased in the upgrade menu.
+        // Dims the slot and shows "Locked" until the ability is purchased in the upgrade menu.
         RectTransform lockedRect = GetOrCreateChild(slotRect, "LockedOverlay");
         lockedRect.anchorMin = Vector2.zero;
         lockedRect.anchorMax = Vector2.one;
@@ -122,15 +145,8 @@ public class AbilityBarSetupTool : EditorWindow
         lockedText.alignment = TextAlignmentOptions.Center;
         lockedText.enableWordWrapping = true;
 
-        SerializedObject serializedAbilities = new SerializedObject(abilities);
-        serializedAbilities.FindProperty("autoCollectCooldownFill").objectReferenceValue = cooldownImage;
-        serializedAbilities.FindProperty("autoCollectLockedOverlay").objectReferenceValue = lockedRect.gameObject;
-        serializedAbilities.ApplyModifiedProperties();
-
-        EditorUtility.SetDirty(abilities);
-        EditorSceneManager.MarkSceneDirty(playerObject.scene);
-
-        Debug.Log("Ability bar setup complete. Press 1 in Play mode to use Auto-Collect once unlocked.");
+        lockedOverlay = lockedRect.gameObject;
+        return cooldownImage;
     }
 
     private Canvas GetOrCreateCanvas() {

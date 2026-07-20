@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class ResourceCounter : MonoBehaviour
@@ -6,6 +7,9 @@ public class ResourceCounter : MonoBehaviour
     public TextMeshProUGUI appleText;
     public TextMeshProUGUI oreText;
     public TextMeshProUGUI poppyText;
+
+    public Image progressFillImage;
+    public TextMeshProUGUI progressPercentText;
 
     private int apples;
     private int ores;
@@ -69,6 +73,19 @@ public class ResourceCounter : MonoBehaviour
         if (poppyText != null)
         {
             poppyText.text = "Poppies: " + poppies + "/" + totalPoppies;
+        }
+
+        int totalCollected = apples + ores + poppies;
+        int totalAvailable = totalApples + totalOres + totalPoppies;
+        float fraction = totalAvailable > 0 ? (float)totalCollected / totalAvailable : 0f;
+
+        if (progressFillImage != null)
+        {
+            progressFillImage.fillAmount = fraction;
+        }
+        if (progressPercentText != null)
+        {
+            progressPercentText.text = Mathf.RoundToInt(fraction * 100f) + "%";
         }
     }
 
