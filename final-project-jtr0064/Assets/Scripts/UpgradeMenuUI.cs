@@ -22,6 +22,7 @@ public class UpgradeMenuUI : MonoBehaviour
     public PlayerPoints playerPoints;
     public ThirdPersonController controller;
     public StarterAssetsInputs starterInputs;
+    public PlayerInteraction interaction;
 
     private bool isOpen;
 
@@ -67,6 +68,10 @@ public class UpgradeMenuUI : MonoBehaviour
 
         if (starterInputs != null) {
             starterInputs.enabled = !isOpen;
+        }
+
+        if (interaction != null) {
+            interaction.SetInteractionEnabled(!isOpen);
         }
 
         if (isOpen) {

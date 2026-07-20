@@ -127,6 +127,18 @@ public class PlayerInteraction : MonoBehaviour
         return char.ToUpper(s[0]) + s.Substring(1);
     }
 
+    // Lets other systems (e.g. the upgrade menu) suspend interaction entirely while they have
+    // focus - disabling stops Update from re-showing the prompt, but since SetPromptVisible is
+    // only ever called from Update/the gather coroutine, an already-visible prompt needs an
+    // explicit hide here too rather than just relying on Update no longer running.
+    public void SetInteractionEnabled(bool value)
+    {
+        enabled = value;
+        if (!value) {
+            SetPromptVisible(false);
+        }
+    }
+
     public void OnInteract(InputValue value)
     {
         if (!value.isPressed) {

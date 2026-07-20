@@ -81,9 +81,9 @@ public class UpgradeMenuSetupTool : EditorWindow
         panelRect.anchorMin = new Vector2(0.5f, 0.5f);
         panelRect.anchorMax = new Vector2(0.5f, 0.5f);
         panelRect.pivot = new Vector2(0.5f, 0.5f);
-        // Wider than tall so it fits comfortably in a short/wide Game view (Free Aspect)
-        // instead of running off the bottom of the screen.
-        panelRect.sizeDelta = new Vector2(600f, 365f);
+        // Wide, single-column list (one row per upgrade/ability) rather than a card grid -
+        // simpler to lay out correctly and matches the flat style of the intro/win screens.
+        panelRect.sizeDelta = new Vector2(640f, 400f);
         panelRect.anchoredPosition = Vector2.zero;
 
         UIStyle.RoundedImage(panel, UIStyle.PanelBackground);
@@ -95,7 +95,11 @@ public class UpgradeMenuSetupTool : EditorWindow
         panelLayout.spacing = 8f;
         panelLayout.childAlignment = TextAnchor.UpperCenter;
         panelLayout.childControlWidth = true;
-        panelLayout.childControlHeight = false;
+        // childControlHeight must be true so the LayoutElement heights set on each child below
+        // actually take effect - left false, Unity instead uses each child's raw, uncontrolled
+        // RectTransform size (defaults to 100x100, or 200x50 for a freshly-added TMP text),
+        // which is what was causing every row/divider to overlap and blow past the panel.
+        panelLayout.childControlHeight = true;
         panelLayout.childForceExpandWidth = true;
         panelLayout.childForceExpandHeight = false;
 
@@ -117,20 +121,18 @@ public class UpgradeMenuSetupTool : EditorWindow
         TextMeshProUGUI pointsLabel = GetOrAddComponent<TextMeshProUGUI>(pointsRect.gameObject);
         UIStyle.ApplyText(pointsLabel, 13f, UIStyle.Accent, TextAlignmentOptions.Center);
 
-        // --- Upgrades section: header + a row of cards, one per upgrade ---
+        // --- Upgrades section: header + one row per upgrade ---
         CreateSectionHeader(panelRect, "UpgradesHeader", "UPGRADES");
 
-        RectTransform upgradesRow = CreateCardRow(panelRect, "UpgradesRow");
-        TextMeshProUGUI speedLabel = CreateCard(upgradesRow, "Speed", "Upgrade Speed", out Button speedButton);
-        TextMeshProUGUI gatherLabel = CreateCard(upgradesRow, "Gather", "Upgrade Gather Distance", out Button gatherButton);
-        TextMeshProUGUI gatherSpeedLabel = CreateCard(upgradesRow, "GatherSpeed", "Upgrade Gather Speed", out Button gatherSpeedButton);
+        TextMeshProUGUI speedLabel = CreateUpgradeRow(panelRect, "Speed", "Upgrade Speed", out Button speedButton);
+        TextMeshProUGUI gatherLabel = CreateUpgradeRow(panelRect, "Gather", "Upgrade Gather Distance", out Button gatherButton);
+        TextMeshProUGUI gatherSpeedLabel = CreateUpgradeRow(panelRect, "GatherSpeed", "Upgrade Gather Speed", out Button gatherSpeedButton);
 
-        // --- Abilities section: header + a row of cards, one per ability ---
+        // --- Abilities section: header + one row per ability ---
         CreateSectionHeader(panelRect, "AbilitiesHeader", "ABILITIES");
 
-        RectTransform abilitiesRow = CreateCardRow(panelRect, "AbilitiesRow");
-        TextMeshProUGUI autoCollectLabel = CreateCard(abilitiesRow, "AutoCollect", "Unlock Auto-Collect", out Button autoCollectButton);
-        TextMeshProUGUI highlightLabel = CreateCard(abilitiesRow, "Highlight", "Unlock Highlight", out Button highlightButton);
+        TextMeshProUGUI autoCollectLabel = CreateUpgradeRow(panelRect, "AutoCollect", "Unlock Auto-Collect", out Button autoCollectButton);
+        TextMeshProUGUI highlightLabel = CreateUpgradeRow(panelRect, "Highlight", "Unlock Highlight", out Button highlightButton);
 
         SerializedObject serializedMenu = new SerializedObject(menuUI);
         serializedMenu.FindProperty("panelRoot").objectReferenceValue = panel;
@@ -149,6 +151,7 @@ public class UpgradeMenuSetupTool : EditorWindow
         serializedMenu.FindProperty("playerPoints").objectReferenceValue = playerPoints;
         serializedMenu.FindProperty("controller").objectReferenceValue = controller;
         serializedMenu.FindProperty("starterInputs").objectReferenceValue = starterInputs;
+        serializedMenu.FindProperty("interaction").objectReferenceValue = playerInteraction;
         serializedMenu.ApplyModifiedProperties();
 
         panel.SetActive(false);
@@ -164,14 +167,16 @@ public class UpgradeMenuSetupTool : EditorWindow
     private void CreateSectionHeader(Transform parent, string name, string label) {
         RectTransform headerRect = GetOrCreateChild(parent, name);
         LayoutElement headerLayoutElement = GetOrAddComponent<LayoutElement>(headerRect.gameObject);
-        headerLayoutElement.minHeight = 20f;
-        headerLayoutElement.preferredHeight = 20f;
+        headerLayoutElement.minHeight = 22f;
+        headerLayoutElement.preferredHeight = 22f;
 
         VerticalLayoutGroup headerLayout = GetOrAddComponent<VerticalLayoutGroup>(headerRect.gameObject);
         headerLayout.padding = new RectOffset(2, 2, 3, 0);
         headerLayout.spacing = 2f;
         headerLayout.childControlWidth = true;
-        headerLayout.childControlHeight = false;
+        // See the note on panelLayout above - this must be true for the Text/Divider heights
+        // below to actually be honored instead of falling back to their raw default sizes.
+        headerLayout.childControlHeight = true;
         headerLayout.childForceExpandWidth = true;
         headerLayout.childForceExpandHeight = false;
 
@@ -191,61 +196,42 @@ public class UpgradeMenuSetupTool : EditorWindow
         UIStyle.RoundedImage(dividerRect.gameObject, UIStyle.Divider);
     }
 
-    // Creates the horizontal strip that a section's cards sit in, side by side.
-    private RectTransform CreateCardRow(Transform parent, string name) {
-        RectTransform rowRect = GetOrCreateChild(parent, name);
+    // Creates one upgrade/ability row: a single full-width strip with the stat label on the
+    // left (one line, grows to fill available space) and the action button pinned to the
+    // right at a fixed width. Rows stack vertically in the panel's own layout group, so there
+    // is only one level of nested layout beneath the panel - simpler than a card grid and it
+    // gives long stat strings room to sit on one line instead of wrapping across three.
+    private TextMeshProUGUI CreateUpgradeRow(Transform parent, string baseName, string buttonLabel, out Button button) {
+        RectTransform rowRect = GetOrCreateChild(parent, baseName + "Row");
         LayoutElement rowLayoutElement = GetOrAddComponent<LayoutElement>(rowRect.gameObject);
-        rowLayoutElement.minHeight = 100f;
-        rowLayoutElement.preferredHeight = 100f;
+        rowLayoutElement.minHeight = 32f;
+        rowLayoutElement.preferredHeight = 32f;
+
+        UIStyle.RoundedImage(rowRect.gameObject, UIStyle.RowBackground);
 
         HorizontalLayoutGroup rowLayout = GetOrAddComponent<HorizontalLayoutGroup>(rowRect.gameObject);
-        rowLayout.padding = new RectOffset(0, 0, 0, 0);
+        rowLayout.padding = new RectOffset(10, 10, 4, 4);
         rowLayout.spacing = 10f;
-        rowLayout.childAlignment = TextAnchor.MiddleCenter;
+        rowLayout.childAlignment = TextAnchor.MiddleLeft;
         rowLayout.childControlWidth = true;
         rowLayout.childControlHeight = true;
         rowLayout.childForceExpandWidth = false;
         rowLayout.childForceExpandHeight = true;
 
-        return rowRect;
-    }
-
-    // Creates one upgrade/ability card: a fixed-width rounded tile with the stat label on top
-    // (word-wrapped, grows to fill available space) and the action button pinned at the
-    // bottom. Cards sit side by side in a CreateCardRow container instead of stacking, so a
-    // whole section only costs one row of vertical space no matter how many items it has.
-    private TextMeshProUGUI CreateCard(Transform rowParent, string baseName, string buttonLabel, out Button button) {
-        RectTransform cardRect = GetOrCreateChild(rowParent, baseName + "Card");
-        LayoutElement cardLayoutElement = GetOrAddComponent<LayoutElement>(cardRect.gameObject);
-        cardLayoutElement.minWidth = 178f;
-        cardLayoutElement.preferredWidth = 178f;
-        cardLayoutElement.flexibleWidth = 0f;
-
-        UIStyle.RoundedImage(cardRect.gameObject, UIStyle.RowBackground);
-
-        VerticalLayoutGroup cardLayout = GetOrAddComponent<VerticalLayoutGroup>(cardRect.gameObject);
-        cardLayout.padding = new RectOffset(8, 8, 6, 6);
-        cardLayout.spacing = 4f;
-        cardLayout.childAlignment = TextAnchor.UpperCenter;
-        cardLayout.childControlWidth = true;
-        cardLayout.childControlHeight = false;
-        cardLayout.childForceExpandWidth = true;
-        cardLayout.childForceExpandHeight = false;
-
-        RectTransform labelRect = GetOrCreateChild(cardRect, baseName + "Label");
+        RectTransform labelRect = GetOrCreateChild(rowRect, baseName + "Label");
         LayoutElement labelLayoutElement = GetOrAddComponent<LayoutElement>(labelRect.gameObject);
-        labelLayoutElement.minHeight = 50f;
-        labelLayoutElement.flexibleHeight = 1f;
+        labelLayoutElement.flexibleWidth = 1f;
 
         TextMeshProUGUI label = GetOrAddComponent<TextMeshProUGUI>(labelRect.gameObject);
-        UIStyle.ApplyText(label, 11f, UIStyle.TextPrimary, TextAlignmentOptions.Left);
-        label.enableWordWrapping = true;
+        UIStyle.ApplyText(label, 12f, UIStyle.TextPrimary, TextAlignmentOptions.MidlineLeft);
+        label.enableWordWrapping = false;
+        label.overflowMode = TextOverflowModes.Ellipsis;
 
-        RectTransform buttonRect = GetOrCreateChild(cardRect, baseName + "Button");
+        RectTransform buttonRect = GetOrCreateChild(rowRect, baseName + "Button");
         LayoutElement buttonLayoutElement = GetOrAddComponent<LayoutElement>(buttonRect.gameObject);
-        buttonLayoutElement.minHeight = 26f;
-        buttonLayoutElement.preferredHeight = 26f;
-        buttonLayoutElement.flexibleHeight = 0f;
+        buttonLayoutElement.minWidth = 140f;
+        buttonLayoutElement.preferredWidth = 140f;
+        buttonLayoutElement.flexibleWidth = 0f;
 
         Image buttonImage = GetOrAddComponent<Image>(buttonRect.gameObject);
         button = GetOrAddComponent<Button>(buttonRect.gameObject);
@@ -260,7 +246,7 @@ public class UpgradeMenuSetupTool : EditorWindow
         TextMeshProUGUI buttonText = GetOrAddComponent<TextMeshProUGUI>(textRect.gameObject);
         buttonText.text = buttonLabel;
         UIStyle.ApplyText(buttonText, 11f, UIStyle.TextPrimary, TextAlignmentOptions.Center, FontStyles.Bold);
-        buttonText.enableWordWrapping = true;
+        buttonText.enableWordWrapping = false;
 
         return label;
     }
