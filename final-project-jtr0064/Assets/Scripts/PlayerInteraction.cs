@@ -24,12 +24,15 @@ public class PlayerInteraction : MonoBehaviour
     [SerializeField] private float fallbackDuration = 1f;
 
     private InteractableResource currentResource;
+    private DropoffLocation currentDropoff;
     private Animator animator;
+    private PlayerInventory inventory;
     private bool isInteracting;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         animator = GetComponentInChildren<Animator>();
+        inventory = GetComponent<PlayerInventory>();
 
         SetPromptVisible(false);
 
@@ -61,29 +64,54 @@ public class PlayerInteraction : MonoBehaviour
     {
         Collider[] hits = Physics.OverlapSphere(transform.position, interactionRange);
         InteractableResource closestResource = null;
-        float closestDistance = Mathf.Infinity;
+        float closestResourceDistance = Mathf.Infinity;
+
+        DropoffLocation closestDropoff = null;
+        float closestDropoffDistance = Mathf.Infinity;
 
         foreach (Collider hit in hits)
         {
             InteractableResource resource = hit.GetComponentInParent<InteractableResource>();
-            if (resource == null) {
+            if (resource != null) {
+                float distance = Vector3.Distance(transform.position, resource.transform.position);
+                if (distance < closestResourceDistance) {
+                    closestResourceDistance = distance;
+                    closestResource = resource;
+                }
                 continue;
             }
 
-            float distance = Vector3.Distance(transform.position, resource.transform.position);
-            if (distance < closestDistance) {
-                closestDistance = distance;
-                closestResource = resource;
+            // Only worth showing/targeting a dropoff if we're actually carrying something it accepts.
+            DropoffLocation dropoff = hit.GetComponentInParent<DropoffLocation>();
+            if (dropoff != null && inventory != null && inventory.GetCarried(dropoff.acceptedResourceType) > 0) {
+                float distance = Vector3.Distance(transform.position, dropoff.transform.position);
+                if (distance < closestDropoffDistance) {
+                    closestDropoffDistance = distance;
+                    closestDropoff = dropoff;
+                }
             }
         }
-    
-        currentResource = closestResource;
+
+        // Only one prompt/action is active at a time - whichever is actually closer wins.
+        if (closestDropoff != null && closestDropoffDistance < closestResourceDistance) {
+            currentResource = null;
+            currentDropoff = closestDropoff;
+        } else {
+            currentResource = closestResource;
+            currentDropoff = null;
+        }
 
         if (promptText == null) {
             return;
         }
 
-        if (currentResource != null && !isInteracting) {
+        if (isInteracting) {
+            SetPromptVisible(false);
+        } else if (currentDropoff != null) {
+            int carried = inventory.GetCarried(currentDropoff.acceptedResourceType);
+            promptText.text = "drop off " + Capitalize(currentDropoff.acceptedResourceType) + " (" + carried + ")";
+            SetPromptVisible(true);
+        } else if (currentResource != null) {
             promptText.text = "gather " + currentResource.resourceName;
             SetPromptVisible(true);
         } else {
@@ -91,17 +119,41 @@ public class PlayerInteraction : MonoBehaviour
         }
     }
 
+    private static string Capitalize(string s)
+    {
+        if (string.IsNullOrEmpty(s)) {
+            return s;
+        }
+        return char.ToUpper(s[0]) + s.Substring(1);
+    }
+
     public void OnInteract(InputValue value)
     {
         if (!value.isPressed) {
             return;
         }
-        
-        if (currentResource == null || isInteracting) {
+
+        if (isInteracting) {
             return;
         }
 
-        StartCoroutine(InteractRoutine());
+        if (currentDropoff != null) {
+            DoDropoff(currentDropoff);
+            return;
+        }
+
+        if (currentResource != null) {
+            StartCoroutine(InteractRoutine());
+        }
+    }
+
+    private void DoDropoff(DropoffLocation dropoff)
+    {
+        string type = dropoff.acceptedResourceType;
+        int deposited = dropoff.Deposit(inventory);
+        if (deposited > 0) {
+            ShowMessagePopup("Delivered " + deposited + " " + Capitalize(type));
+        }
     }
 
     private IEnumerator InteractRoutine()
@@ -171,8 +223,12 @@ public class PlayerInteraction : MonoBehaviour
 
         if (resource != null) {
             string resourceName = resource.resourceName;
-            resource.Interact();
-            ShowGatherPopup(resourceName);
+            bool gathered = resource.Interact(inventory);
+            if (gathered) {
+                ShowGatherPopup(resourceName);
+            } else {
+                ShowMessagePopup(resourceName + " inventory full");
+            }
         }
 
         isInteracting = false;
@@ -182,6 +238,13 @@ public class PlayerInteraction : MonoBehaviour
     {
         if (gatherPopup != null) {
             gatherPopup.Show(resourceName);
+        }
+    }
+
+    private void ShowMessagePopup(string message)
+    {
+        if (gatherPopup != null) {
+            gatherPopup.ShowMessage(message);
         }
     }
 }

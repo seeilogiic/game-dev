@@ -11,21 +11,18 @@ public class InteractableResource : MonoBehaviour
 
     public bool destroyWhenEmpty = true;
 
-    private ResourceCounter resourceCounter;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        resourceCounter = FindObjectOfType<ResourceCounter>();
-    }
-
-    public void Interact()
+    // Adds this resource to the player's carried PlayerInventory (banking happens later, at
+    // a matching DropoffLocation). Returns false without consuming a use if the inventory has
+    // no room left for this type, so the resource stays gatherable until the player deposits.
+    public bool Interact(PlayerInventory inventory)
     {
         if (usesRemaining <= 0) {
-            return;
+            return false;
         }
 
-        if (resourceCounter != null) {
-            resourceCounter.AddResource(resourceName, amountPerCollect);
+        int added = inventory != null ? inventory.Add(resourceName, amountPerCollect) : amountPerCollect;
+        if (added <= 0) {
+            return false;
         }
 
         usesRemaining--;
@@ -33,5 +30,7 @@ public class InteractableResource : MonoBehaviour
         if (usesRemaining <= 0 && destroyWhenEmpty) {
             gameObject.SetActive(false);
         }
+
+        return true;
     }
 }

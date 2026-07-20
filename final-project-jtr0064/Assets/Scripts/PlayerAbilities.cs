@@ -16,12 +16,14 @@ public class PlayerAbilities : MonoBehaviour
 
     private PlayerUpgrades playerUpgrades;
     private PlayerInteraction interaction;
+    private PlayerInventory inventory;
     private float autoCollectReadyTime;
 
     void Start()
     {
         playerUpgrades = GetComponent<PlayerUpgrades>();
         interaction = GetComponent<PlayerInteraction>();
+        inventory = GetComponent<PlayerInventory>();
 
         if (autoCollectCooldownFill != null) {
             autoCollectCooldownFill.fillAmount = 0f;
@@ -68,8 +70,12 @@ public class PlayerAbilities : MonoBehaviour
         }
 
         string resourceName = target.resourceName;
+        bool gathered = target.Interact(inventory);
+        if (!gathered) {
+            return;
+        }
+
         autoCollectReadyTime = Time.time + autoCollectCooldown;
-        target.Interact();
 
         if (interaction != null) {
             interaction.ShowGatherPopup(resourceName);

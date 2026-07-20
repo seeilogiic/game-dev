@@ -21,11 +21,18 @@ public class GatherPopupUI : MonoBehaviour
 
     public void Show(string resourceName)
     {
+        ShowMessage("Gathered " + resourceName);
+    }
+
+    // Same fade behavior as Show(), but with no "Gathered " prefix - for dropoff/inventory
+    // feedback that doesn't fit that template (e.g. "Delivered 3 Ore", "Ore inventory full").
+    public void ShowMessage(string message)
+    {
         if (popupText == null) {
             return;
         }
 
-        popupText.text = "Gathered " + resourceName;
+        popupText.text = message;
 
         if (activeRoutine != null) {
             StopCoroutine(activeRoutine);
