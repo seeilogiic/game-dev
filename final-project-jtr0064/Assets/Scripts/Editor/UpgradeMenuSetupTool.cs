@@ -61,6 +61,7 @@ public class UpgradeMenuSetupTool : EditorWindow
         }
 
         PlayerUpgrades playerUpgrades = GetOrAddComponent<PlayerUpgrades>(playerObject);
+        PlayerPoints playerPoints = GetOrAddComponent<PlayerPoints>(playerObject);
 
         RectTransform panelRect = GetOrCreateChild(canvas.transform, "UpgradeMenuPanel");
         GameObject panel = panelRect.gameObject;
@@ -88,6 +89,18 @@ public class UpgradeMenuSetupTool : EditorWindow
         titleText.alignment = TextAlignmentOptions.Center;
         titleText.color = Color.white;
 
+        RectTransform pointsRect = GetOrCreateChild(panelRect, "PointsLabel");
+        pointsRect.anchorMin = new Vector2(0.5f, 1f);
+        pointsRect.anchorMax = new Vector2(0.5f, 1f);
+        pointsRect.pivot = new Vector2(0.5f, 1f);
+        pointsRect.sizeDelta = new Vector2(320f, 25f);
+        pointsRect.anchoredPosition = new Vector2(0f, -50f);
+
+        TextMeshProUGUI pointsLabel = GetOrAddComponent<TextMeshProUGUI>(pointsRect.gameObject);
+        pointsLabel.fontSize = 16;
+        pointsLabel.alignment = TextAlignmentOptions.Center;
+        pointsLabel.color = Color.white;
+
         TextMeshProUGUI speedLabel = CreateLabel(panelRect, "SpeedLabel", new Vector2(-85f, 20f));
         Button speedButton = CreateButton(panelRect, "SpeedButton", "Upgrade Speed", new Vector2(110f, 20f));
 
@@ -102,6 +115,7 @@ public class UpgradeMenuSetupTool : EditorWindow
 
         SerializedObject serializedMenu = new SerializedObject(menuUI);
         serializedMenu.FindProperty("panelRoot").objectReferenceValue = panel;
+        serializedMenu.FindProperty("pointsLabel").objectReferenceValue = pointsLabel;
         serializedMenu.FindProperty("speedLabel").objectReferenceValue = speedLabel;
         serializedMenu.FindProperty("gatherLabel").objectReferenceValue = gatherLabel;
         serializedMenu.FindProperty("gatherSpeedLabel").objectReferenceValue = gatherSpeedLabel;
@@ -111,6 +125,7 @@ public class UpgradeMenuSetupTool : EditorWindow
         serializedMenu.FindProperty("upgradeGatherSpeedButton").objectReferenceValue = gatherSpeedButton;
         serializedMenu.FindProperty("unlockAutoCollectButton").objectReferenceValue = autoCollectButton;
         serializedMenu.FindProperty("playerUpgrades").objectReferenceValue = playerUpgrades;
+        serializedMenu.FindProperty("playerPoints").objectReferenceValue = playerPoints;
         serializedMenu.FindProperty("controller").objectReferenceValue = controller;
         serializedMenu.FindProperty("starterInputs").objectReferenceValue = starterInputs;
         serializedMenu.ApplyModifiedProperties();
@@ -119,6 +134,7 @@ public class UpgradeMenuSetupTool : EditorWindow
 
         EditorUtility.SetDirty(menuUI);
         EditorUtility.SetDirty(playerUpgrades);
+        EditorUtility.SetDirty(playerPoints);
         EditorSceneManager.MarkSceneDirty(playerObject.scene);
 
         Debug.Log("Upgrade menu setup complete. Press M in Play mode to open it.");

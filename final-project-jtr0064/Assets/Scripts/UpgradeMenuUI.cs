@@ -6,6 +6,7 @@ using StarterAssets;
 public class UpgradeMenuUI : MonoBehaviour
 {
     public GameObject panelRoot;
+    public TextMeshProUGUI pointsLabel;
     public TextMeshProUGUI speedLabel;
     public TextMeshProUGUI gatherLabel;
     public TextMeshProUGUI gatherSpeedLabel;
@@ -16,6 +17,7 @@ public class UpgradeMenuUI : MonoBehaviour
     public Button unlockAutoCollectButton;
 
     public PlayerUpgrades playerUpgrades;
+    public PlayerPoints playerPoints;
     public ThirdPersonController controller;
     public StarterAssetsInputs starterInputs;
 
@@ -119,10 +121,22 @@ public class UpgradeMenuUI : MonoBehaviour
             return;
         }
 
+        int points = playerPoints != null ? playerPoints.points : 0;
+        bool canAfford = points >= PlayerUpgrades.upgradeCost;
+
+        if (pointsLabel != null) {
+            pointsLabel.text = "Points: " + points;
+        }
+
         if (speedLabel != null) {
             speedLabel.text = "Speed Lv. " + playerUpgrades.speedLevel +
                 "  (Move " + controller.MoveSpeed.ToString("F1") +
-                " / Sprint " + controller.SprintSpeed.ToString("F1") + ")";
+                " / Sprint " + controller.SprintSpeed.ToString("F1") + ")" +
+                "  - " + PlayerUpgrades.upgradeCost + " pts";
+        }
+
+        if (upgradeSpeedButton != null) {
+            upgradeSpeedButton.interactable = canAfford;
         }
 
         PlayerInteraction interaction = playerUpgrades.GetComponent<PlayerInteraction>();
@@ -130,23 +144,34 @@ public class UpgradeMenuUI : MonoBehaviour
         if (gatherLabel != null) {
             float range = interaction != null ? interaction.interactionRange : 0f;
             gatherLabel.text = "Gather Distance Lv. " + playerUpgrades.gatherLevel +
-                "  (" + range.ToString("F1") + "m)";
+                "  (" + range.ToString("F1") + "m)" +
+                "  - " + PlayerUpgrades.upgradeCost + " pts";
+        }
+
+        if (upgradeGatherButton != null) {
+            upgradeGatherButton.interactable = canAfford;
         }
 
         if (gatherSpeedLabel != null) {
             float multiplier = interaction != null ? interaction.gatherSpeedMultiplier : 1f;
             gatherSpeedLabel.text = "Gather Speed Lv. " + playerUpgrades.gatherSpeedLevel +
-                "  (" + multiplier.ToString("F2") + "x)";
+                "  (" + multiplier.ToString("F2") + "x)" +
+                "  - " + PlayerUpgrades.upgradeCost + " pts";
+        }
+
+        if (upgradeGatherSpeedButton != null) {
+            upgradeGatherSpeedButton.interactable = canAfford;
         }
 
         bool autoCollectUnlocked = playerUpgrades.autoCollectLevel > 0;
 
         if (autoCollectLabel != null) {
-            autoCollectLabel.text = "Auto-Collect: " + (autoCollectUnlocked ? "Unlocked" : "Locked");
+            autoCollectLabel.text = "Auto-Collect: " + (autoCollectUnlocked ? "Unlocked" : "Locked") +
+                (autoCollectUnlocked ? "" : "  - " + PlayerUpgrades.upgradeCost + " pts");
         }
 
         if (unlockAutoCollectButton != null) {
-            unlockAutoCollectButton.interactable = !autoCollectUnlocked;
+            unlockAutoCollectButton.interactable = !autoCollectUnlocked && canAfford;
         }
     }
 }

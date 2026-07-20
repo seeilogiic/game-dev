@@ -72,6 +72,7 @@ public class DropoffSetupTool : EditorWindow
 
         GameObject playerObject = playerInteraction.gameObject;
         PlayerInventory inventory = GetOrAddComponent<PlayerInventory>(playerObject);
+        GetOrAddComponent<PlayerPoints>(playerObject);
 
         Canvas canvas = GetOrCreateCanvas();
         targetCanvas = canvas;

@@ -152,7 +152,7 @@ public class PlayerInteraction : MonoBehaviour
         string type = dropoff.acceptedResourceType;
         int deposited = dropoff.Deposit(inventory);
         if (deposited > 0) {
-            ShowMessagePopup("Delivered " + deposited + " " + Capitalize(type));
+            ShowMessagePopup("Delivered " + deposited + " " + Capitalize(type) + " (+" + deposited + " pts)");
         }
     }
 

@@ -1,7 +1,8 @@
 using UnityEngine;
 
 // A type-specific bank point: depositing here moves a matching resource type out of the
-// player's carried PlayerInventory and into ResourceCounter's banked tally.
+// player's carried PlayerInventory and into ResourceCounter's banked tally, awarding 1
+// PlayerPoints point per resource deposited.
 public class DropoffLocation : MonoBehaviour
 {
     [Tooltip("Resource type this dropoff accepts, matched like ResourceCounter (\"apple\", \"ore\", \"poppy\").")]
@@ -29,6 +30,11 @@ public class DropoffLocation : MonoBehaviour
 
         if (resourceCounter != null) {
             resourceCounter.AddResource(acceptedResourceType, amount);
+        }
+
+        PlayerPoints points = inventory.GetComponent<PlayerPoints>();
+        if (points != null) {
+            points.AddPoints(amount);
         }
 
         inventory.Consume(acceptedResourceType, amount);

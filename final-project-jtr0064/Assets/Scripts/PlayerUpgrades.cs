@@ -4,6 +4,8 @@ using StarterAssets;
 
 public class PlayerUpgrades : MonoBehaviour
 {
+    public const int upgradeCost = 10;
+
     public float speedIncrement = 0.5f;
     public float gatherIncrement = 0.5f;
     public float gatherSpeedIncrement = 0.25f;
@@ -17,51 +19,57 @@ public class PlayerUpgrades : MonoBehaviour
 
     private ThirdPersonController controller;
     private PlayerInteraction interaction;
+    private PlayerPoints points;
 
     void Start()
     {
         controller = GetComponent<ThirdPersonController>();
         interaction = GetComponent<PlayerInteraction>();
+        points = GetComponent<PlayerPoints>();
     }
 
-    public void UpgradeSpeed()
+    public bool UpgradeSpeed()
     {
-        if (controller == null) {
-            return;
+        if (controller == null || points == null || !points.TrySpend(upgradeCost)) {
+            return false;
         }
 
         controller.MoveSpeed += speedIncrement;
         controller.SprintSpeed += speedIncrement;
         speedLevel++;
+        return true;
     }
 
-    public void UpgradeGatherDistance()
+    public bool UpgradeGatherDistance()
     {
-        if (interaction == null) {
-            return;
+        if (interaction == null || points == null || !points.TrySpend(upgradeCost)) {
+            return false;
         }
 
         interaction.interactionRange += gatherIncrement;
         gatherLevel++;
+        return true;
     }
 
-    public void UpgradeGatherSpeed()
+    public bool UpgradeGatherSpeed()
     {
-        if (interaction == null) {
-            return;
+        if (interaction == null || points == null || !points.TrySpend(upgradeCost)) {
+            return false;
         }
 
         interaction.gatherSpeedMultiplier += gatherSpeedIncrement;
         gatherSpeedLevel++;
+        return true;
     }
 
-    public void UnlockAutoCollect()
+    public bool UnlockAutoCollect()
     {
-        if (autoCollectLevel >= 1) {
-            return;
+        if (autoCollectLevel >= 1 || points == null || !points.TrySpend(upgradeCost)) {
+            return false;
         }
 
         autoCollectLevel = 1;
+        return true;
     }
 
     public void OnToggleMenu(InputValue value)
