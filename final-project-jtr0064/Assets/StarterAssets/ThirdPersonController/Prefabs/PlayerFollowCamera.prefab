@@ -79,6 +79,7 @@ GameObject:
   - component: {fileID: 2070925442191277757}
   - component: {fileID: 2070925442191277753}
   - component: {fileID: 2070925442191277752}
+  - component: {fileID: 2070925442191277799}
   m_Layer: 0
   m_Name: cm
   m_TagString: Untagged
@@ -151,3 +152,19 @@ MonoBehaviour:
     m_Bits: 1
   IgnoreTag: Player
   CameraRadius: 0.15
+--- !u!114 &2070925442191277799
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2070925442191277755}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c1537f7b50c4ef8943f434eebe53cd3, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  extraZoomDistances:
+  - 7
+  - 11
+  - 16
