@@ -11,12 +11,15 @@ public class ResourceCounter : MonoBehaviour
     public Image progressFillImage;
     public TextMeshProUGUI progressPercentText;
 
+    public WinScreenUI winScreenUI;
+
     private int apples;
     private int ores;
     private int poppies;
     private int totalApples;
     private int totalOres;
     private int totalPoppies;
+    private bool hasWon;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -86,6 +89,15 @@ public class ResourceCounter : MonoBehaviour
         if (progressPercentText != null)
         {
             progressPercentText.text = Mathf.RoundToInt(fraction * 100f) + "%";
+        }
+
+        if (!hasWon && totalAvailable > 0 && totalCollected >= totalAvailable)
+        {
+            hasWon = true;
+            if (winScreenUI != null)
+            {
+                winScreenUI.Show();
+            }
         }
     }
 

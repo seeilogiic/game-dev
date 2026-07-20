@@ -10,6 +10,9 @@ public class ResourceScatterTool : EditorWindow
     private int amount = 20;
     private float minDistance = 8f;
 
+    private bool testingMode = false;
+    private float testingRadius = 10f;
+
     [MenuItem("Tools/Terrain/Resource Scatter Tool")]
     public static void ShowWindow() {
         
@@ -52,6 +55,13 @@ public class ResourceScatterTool : EditorWindow
         amount = EditorGUILayout.IntField("Amount", amount);
         minDistance = EditorGUILayout.FloatField("Minimum Distance", minDistance);
 
+        GUILayout.Space(8);
+        testingMode = EditorGUILayout.Toggle("Testing Mode", testingMode);
+        if (testingMode) {
+            testingRadius = EditorGUILayout.FloatField("Testing Radius (m)", testingRadius);
+            EditorGUILayout.HelpBox("Testing Mode: scatters within " + testingRadius + "m of the player (found via PlayerInteraction) and ignores Minimum Distance. Leave off for normal level layout.", MessageType.Warning);
+        }
+
         if (GUILayout.Button("Scatter Resources")) {
             ScatterResources();
         }
@@ -78,27 +88,51 @@ public class ResourceScatterTool : EditorWindow
         Vector3 terrainPosition = targetTerrain.transform.position;
         Vector3 terrainSize = terrainData.size;
 
+        Vector3 playerPosition = Vector3.zero;
+        if (testingMode) {
+            PlayerInteraction playerInteraction = FindObjectOfType<PlayerInteraction>();
+            if (playerInteraction == null) {
+                Debug.LogError("Testing Mode is on but no PlayerInteraction was found in the scene. Make sure the player is present and the scene is loaded.");
+                return;
+            }
+            playerPosition = playerInteraction.transform.position;
+        }
+
         int placedCount = 0;
         int attempts = 0;
         int maxAttempts = amount * 50;
 
         while (placedCount < amount && attempts < maxAttempts) {
             attempts++;
-            float randomX = Random.Range(0, terrainSize.x);
-            float randomZ = Random.Range(0, terrainSize.z);
-            
+
+            float randomX;
+            float randomZ;
+
+            if (testingMode) {
+                Vector2 offset = Random.insideUnitCircle * testingRadius;
+                randomX = playerPosition.x + offset.x - terrainPosition.x;
+                randomZ = playerPosition.z + offset.y - terrainPosition.z;
+
+                if (randomX < 0 || randomX > terrainSize.x || randomZ < 0 || randomZ > terrainSize.z) {
+                    continue;
+                }
+            } else {
+                randomX = Random.Range(0, terrainSize.x);
+                randomZ = Random.Range(0, terrainSize.z);
+            }
+
             float y = terrainData.GetInterpolatedHeight(
-                randomX / terrainSize.x, 
+                randomX / terrainSize.x,
                 randomZ / terrainSize.z
             );
 
             Vector3 spawnPosition = new Vector3(
-                terrainPosition.x + randomX, 
-                terrainPosition.y + y, 
+                terrainPosition.x + randomX,
+                terrainPosition.y + y,
                 terrainPosition.z + randomZ
             );
 
-            if (!IsFarEnough(spawnPosition)) {
+            if (!testingMode && !IsFarEnough(spawnPosition)) {
                 continue;
             }
 
@@ -113,7 +147,7 @@ public class ResourceScatterTool : EditorWindow
             placedCount++;
         }
 
-        Debug.Log("Scattered " + placedCount + " resources.");
+        Debug.Log("Scattered " + placedCount + " resources." + (testingMode ? " (Testing Mode: within " + testingRadius + "m of player, min distance ignored)" : ""));
     }
 
     private bool IsFarEnough(Vector3 position) {
