@@ -3,18 +3,22 @@ using UnityEditor;
 
 public class NightWispSetupTool : EditorWindow
 {
-    private DayNightCycle dayNightCycle;
-    private Transform player;
-    private Terrain targetTerrain;
-    private Transform parentObject;
+    // [SerializeField] so these survive the domain reload triggered by any script
+    // recompile - otherwise every field silently resets to null/default and the next
+    // click of "Create Night Wisps" runs against unassigned references.
+    [SerializeField] private DayNightCycle dayNightCycle;
+    [SerializeField] private Transform player;
+    [SerializeField] private Terrain targetTerrain;
+    [SerializeField] private Transform parentObject;
 
-    private int count = 3;
-    private float minDistance = 15f;
+    [SerializeField] private int count = 500;
+    [SerializeField] private float minDistance = 15f;
+    [SerializeField] private bool clearExisting = true;
 
-    private float wanderRadius = 6f;
-    private float detectionRadius = 8f;
-    private float safeZoneRadius = 6f;
-    private Color glowColor = new Color(0.4f, 0.85f, 1f);
+    [SerializeField] private float wanderRadius = 6f;
+    [SerializeField] private float detectionRadius = 8f;
+    [SerializeField] private float safeZoneRadius = 6f;
+    [SerializeField] private Color glowColor = new Color(0.4f, 0.85f, 1f);
 
     [MenuItem("Tools/Hazards/Night Wisp Setup Tool")]
     public static void ShowWindow() {
@@ -63,6 +67,10 @@ public class NightWispSetupTool : EditorWindow
         EditorGUILayout.Space();
         count = EditorGUILayout.IntField("Wisp Count", count);
         minDistance = EditorGUILayout.FloatField("Minimum Distance Apart", minDistance);
+        clearExisting = EditorGUILayout.Toggle("Clear Existing Before Creating", clearExisting);
+        if (count > 100) {
+            EditorGUILayout.HelpBox("Large counts create one real-time Light + ParticleSystem per wisp, and all of them activate together at night. Watch the frame rate at night with this many.", MessageType.Warning);
+        }
 
         EditorGUILayout.Space();
         wanderRadius = EditorGUILayout.FloatField("Wander Radius", wanderRadius);
@@ -103,6 +111,26 @@ public class NightWispSetupTool : EditorWindow
             }
         }
 
+        if (targetTerrain == null) {
+            targetTerrain = FindObjectOfType<Terrain>();
+            if (targetTerrain != null) {
+                Debug.Log("Night Wisp Setup: no Target Terrain assigned - auto-found '" + targetTerrain.name + "' in the scene.");
+            } else {
+                Debug.LogWarning("No Terrain found in the scene - wisps will be scattered in a disc around the parent object instead of following terrain height.");
+            }
+        }
+
+        if (clearExisting) {
+            for (int i = parentObject.childCount - 1; i >= 0; i--) {
+                Undo.DestroyObjectImmediate(parentObject.GetChild(i).gameObject);
+            }
+        }
+
+        // Radius of a disc that can fit `count` circles of radius minDistance/2 at roughly
+        // 50% packing density - big enough that the minDistance check below doesn't starve
+        // placement the way a fixed-radius ring did (that capped out at ~6 points total).
+        float discRadius = minDistance * Mathf.Sqrt(count) * 0.75f;
+
         int placedCount = 0;
         int attempts = 0;
         int maxAttempts = count * 50;
@@ -112,7 +140,7 @@ public class NightWispSetupTool : EditorWindow
 
             Vector3 spawnPosition = targetTerrain != null
                 ? RandomTerrainPosition(targetTerrain)
-                : parentObject.position + Quaternion.Euler(0, Random.Range(0, 360), 0) * (Vector3.forward * minDistance);
+                : parentObject.position + Quaternion.Euler(0, Random.Range(0, 360), 0) * (Vector3.forward * Random.Range(minDistance, discRadius));
 
             if (!IsFarEnough(spawnPosition)) {
                 continue;
@@ -123,7 +151,11 @@ public class NightWispSetupTool : EditorWindow
             placedCount++;
         }
 
-        Debug.Log("Night Wisp Setup: created " + placedCount + " wisp(s) under '" + parentObject.name + "'.");
+        if (placedCount < count) {
+            Debug.LogWarning("Night Wisp Setup: only placed " + placedCount + "/" + count + " wisp(s) before running out of attempts - lower Minimum Distance Apart or assign a bigger Target Terrain to fit more.");
+        } else {
+            Debug.Log("Night Wisp Setup: created " + placedCount + " wisp(s) under '" + parentObject.name + "'.");
+        }
     }
 
     private Vector3 RandomTerrainPosition(Terrain terrain) {
@@ -175,6 +207,13 @@ public class NightWispSetupTool : EditorWindow
         ParticleSystem.ShapeModule shape = particles.shape;
         shape.shapeType = ParticleSystemShapeType.Sphere;
         shape.radius = 0.4f;
+
+        // AddComponent<ParticleSystem>() leaves the renderer on the built-in default
+        // material, whose shader URP can't resolve - that's the "big and pink" missing-
+        // shader placeholder. Assign a URP-compatible unlit material explicitly instead.
+        Material particleMaterial = new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit"));
+        particleMaterial.color = glowColor;
+        particles.GetComponent<ParticleSystemRenderer>().material = particleMaterial;
 
         Light glowLight = visual.AddComponent<Light>();
         glowLight.type = LightType.Point;

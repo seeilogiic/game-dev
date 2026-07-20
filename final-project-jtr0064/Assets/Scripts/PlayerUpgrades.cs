@@ -43,12 +43,15 @@ public class PlayerUpgrades : MonoBehaviour
     private ThirdPersonController controller;
     private PlayerInteraction interaction;
     private PlayerPoints points;
+    private DayNightCycle dayNightCycle;
+    private bool wasFoggy;
 
     void Start()
     {
         controller = GetComponent<ThirdPersonController>();
         interaction = GetComponent<PlayerInteraction>();
         points = GetComponent<PlayerPoints>();
+        dayNightCycle = FindFirstObjectByType<DayNightCycle>();
 
         // Capture whatever's set in the inspector as the level-0 baseline, then apply
         // levels 1..10 on top of that.
@@ -64,6 +67,21 @@ public class PlayerUpgrades : MonoBehaviour
         ApplySpeed();
         ApplyGatherDistance();
         ApplyGatherSpeed();
+    }
+
+    void Update()
+    {
+        // Fog halves move speed and gather range; re-apply whenever it toggles on/off
+        // rather than every frame, since ApplySpeed/ApplyGatherDistance aren't otherwise
+        // driven by Update.
+        bool foggy = dayNightCycle != null && dayNightCycle.IsFoggy;
+        if (foggy == wasFoggy) {
+            return;
+        }
+
+        wasFoggy = foggy;
+        ApplySpeed();
+        ApplyGatherDistance();
     }
 
     // Cost to go from `level` to `level + 1`: 2^level, i.e. 1, 2, 4, ... 512.
@@ -142,9 +160,10 @@ public class PlayerUpgrades : MonoBehaviour
             return;
         }
 
+        float fogMultiplier = (dayNightCycle != null && dayNightCycle.IsFoggy) ? 0.5f : 1f;
         float t = speedLevel / (float)maxLevel;
-        controller.SprintSpeed = Mathf.Lerp(baseSprintSpeed, maxSprintSpeed, t);
-        controller.MoveSpeed = Mathf.Lerp(baseMoveSpeed, baseMoveSpeed * (maxSprintSpeed / baseSprintSpeed), t);
+        controller.SprintSpeed = Mathf.Lerp(baseSprintSpeed, maxSprintSpeed, t) * fogMultiplier;
+        controller.MoveSpeed = Mathf.Lerp(baseMoveSpeed, baseMoveSpeed * (maxSprintSpeed / baseSprintSpeed), t) * fogMultiplier;
     }
 
     private void ApplyGatherDistance()
@@ -153,8 +172,9 @@ public class PlayerUpgrades : MonoBehaviour
             return;
         }
 
+        float fogMultiplier = (dayNightCycle != null && dayNightCycle.IsFoggy) ? 0.5f : 1f;
         float t = gatherLevel / (float)maxLevel;
-        interaction.interactionRange = Mathf.Lerp(baseGatherRange, maxGatherRange, t);
+        interaction.interactionRange = Mathf.Lerp(baseGatherRange, maxGatherRange, t) * fogMultiplier;
     }
 
     private void ApplyGatherSpeed()

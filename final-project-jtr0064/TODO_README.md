@@ -20,3 +20,8 @@ Notes on what's still unfinished after Checkpoint 2 submission.
 ## Game length / scaling
 - Planned: quick / medium / long timed game modes, selectable by the player.
 - The number of items to collect should scale based on which mode is selected.
+
+## Day/night cycle
+- `DayNightCycle` day/night lengths are currently set to 20s/20s (both the script
+  defaults and the `SampleScene` inspector values) for fast fog testing. Revert to the
+  real values (240s day / 60s night) before submission.
