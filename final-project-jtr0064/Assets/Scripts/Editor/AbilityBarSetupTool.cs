@@ -44,6 +44,12 @@ public class AbilityBarSetupTool : EditorWindow
         Canvas canvas = GetOrCreateCanvas();
         targetCanvas = canvas;
 
+        // Explicitly reset this every run (not just on canvas creation) so it also fixes an
+        // existing canvas that may have been left in a different scale mode.
+        CanvasScaler scaler = GetOrAddComponent<CanvasScaler>(canvas.gameObject);
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ConstantPixelSize;
+        scaler.referenceResolution = new Vector2(800f, 600f);
+
         PlayerInteraction playerInteraction = FindObjectOfType<PlayerInteraction>();
         if (playerInteraction == null) {
             Debug.LogError("Could not find a PlayerInteraction component in the scene. Make sure the player is present and the scene is loaded.");
@@ -52,6 +58,12 @@ public class AbilityBarSetupTool : EditorWindow
 
         GameObject playerObject = playerInteraction.gameObject;
         PlayerAbilities abilities = GetOrAddComponent<PlayerAbilities>(playerObject);
+
+        // The slot hierarchy changed (Keycap used to be a bare TMP text object, now it's a
+        // rounded chip container with a child text label), so rebuild fresh each time rather
+        // than reuse slots left over from an older version of this tool.
+        DestroyIfExists(canvas.transform, "AbilitySlot1");
+        DestroyIfExists(canvas.transform, "AbilitySlot2");
 
         // Bottom-left, clear of the bottom-center "[E] gather" prompt and the bottom-right
         // menu hint. Slots sit side by side, left to right, 8px apart.
@@ -85,21 +97,27 @@ public class AbilityBarSetupTool : EditorWindow
         slotRect.sizeDelta = new Vector2(64f, 64f);
         slotRect.anchoredPosition = anchoredPosition;
 
-        Image slotImage = GetOrAddComponent<Image>(slot);
-        slotImage.color = new Color(1f, 1f, 1f, 0.15f);
+        UIStyle.RoundedImage(slot, UIStyle.PanelBackground);
 
+        // Keycap chip: a small rounded accent badge in the top-left corner with the key number.
         RectTransform keycapRect = GetOrCreateChild(slotRect, "Keycap");
         keycapRect.anchorMin = new Vector2(0f, 1f);
         keycapRect.anchorMax = new Vector2(0f, 1f);
         keycapRect.pivot = new Vector2(0f, 1f);
-        keycapRect.sizeDelta = new Vector2(20f, 20f);
+        keycapRect.sizeDelta = new Vector2(22f, 22f);
         keycapRect.anchoredPosition = new Vector2(4f, -4f);
 
-        TextMeshProUGUI keycapText = GetOrAddComponent<TextMeshProUGUI>(keycapRect.gameObject);
+        UIStyle.RoundedImage(keycapRect.gameObject, UIStyle.Accent);
+
+        RectTransform keycapTextRect = GetOrCreateChild(keycapRect, "KeycapText");
+        keycapTextRect.anchorMin = Vector2.zero;
+        keycapTextRect.anchorMax = Vector2.one;
+        keycapTextRect.sizeDelta = Vector2.zero;
+        keycapTextRect.anchoredPosition = Vector2.zero;
+
+        TextMeshProUGUI keycapText = GetOrAddComponent<TextMeshProUGUI>(keycapTextRect.gameObject);
         keycapText.text = keycap;
-        keycapText.fontSize = 14;
-        keycapText.color = Color.white;
-        keycapText.alignment = TextAlignmentOptions.Center;
+        UIStyle.ApplyText(keycapText, 13f, UIStyle.PanelBackground, TextAlignmentOptions.Center, FontStyles.Bold);
 
         // Radial overlay that sweeps from full (just used) to empty (ready) as the
         // cooldown elapses - PlayerAbilities drives fillAmount every frame.
@@ -113,8 +131,8 @@ public class AbilityBarSetupTool : EditorWindow
         // plain Image with no sprite ignores fillAmount/Type entirely and just draws a full
         // rectangle, so this must have a sprite assigned for the radial wipe to actually work.
         Image cooldownImage = GetOrAddComponent<Image>(cooldownRect.gameObject);
-        cooldownImage.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
-        cooldownImage.color = Color.white;
+        cooldownImage.sprite = UIStyle.RadialKnobSprite;
+        cooldownImage.color = new Color(UIStyle.Accent.r, UIStyle.Accent.g, UIStyle.Accent.b, 0.55f);
         cooldownImage.type = Image.Type.Filled;
         cooldownImage.fillMethod = Image.FillMethod.Radial360;
         cooldownImage.fillOrigin = (int)Image.Origin360.Top;
@@ -129,8 +147,7 @@ public class AbilityBarSetupTool : EditorWindow
         lockedRect.sizeDelta = Vector2.zero;
         lockedRect.anchoredPosition = Vector2.zero;
 
-        Image lockedImage = GetOrAddComponent<Image>(lockedRect.gameObject);
-        lockedImage.color = new Color(0f, 0f, 0f, 0.75f);
+        UIStyle.RoundedImage(lockedRect.gameObject, new Color(0f, 0f, 0f, 0.78f));
 
         RectTransform lockedTextRect = GetOrCreateChild(lockedRect, "LockedText");
         lockedTextRect.anchorMin = Vector2.zero;
@@ -140,9 +157,7 @@ public class AbilityBarSetupTool : EditorWindow
 
         TextMeshProUGUI lockedText = GetOrAddComponent<TextMeshProUGUI>(lockedTextRect.gameObject);
         lockedText.text = "Locked";
-        lockedText.fontSize = 11;
-        lockedText.color = Color.white;
-        lockedText.alignment = TextAlignmentOptions.Center;
+        UIStyle.ApplyText(lockedText, 11f, UIStyle.TextSecondary, TextAlignmentOptions.Center);
         lockedText.enableWordWrapping = true;
 
         lockedOverlay = lockedRect.gameObject;
@@ -165,10 +180,6 @@ public class AbilityBarSetupTool : EditorWindow
         Canvas canvas = canvasObject.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
 
-        CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ConstantPixelSize;
-        scaler.referenceResolution = new Vector2(800f, 600f);
-
         EnsureEventSystem();
 
         Debug.Log("No Canvas found in the scene - created a new one.");
@@ -186,6 +197,13 @@ public class AbilityBarSetupTool : EditorWindow
 
         InputSystemUIInputModule uiModule = eventSystemObject.GetComponent<InputSystemUIInputModule>();
         uiModule.AssignDefaultActions();
+    }
+
+    private void DestroyIfExists(Transform parent, string name) {
+        Transform existing = parent.Find(name);
+        if (existing != null) {
+            Undo.DestroyObjectImmediate(existing.gameObject);
+        }
     }
 
     private RectTransform GetOrCreateChild(Transform parent, string name) {
