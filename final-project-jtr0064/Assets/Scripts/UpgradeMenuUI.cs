@@ -25,6 +25,11 @@ public class UpgradeMenuUI : MonoBehaviour
 
     private bool isOpen;
 
+    // Deliberately does not force panelRoot inactive here: this component lives on panelRoot
+    // itself, which starts inactive in the scene. If Awake ever forced it inactive again, the
+    // panel's very first SetActive(true) in Toggle() would trigger this Awake mid-call and
+    // immediately re-hide the panel out from under isOpen, desyncing the flag from the real
+    // active state until an extra couple of toggles resynced them.
     void Awake()
     {
         if (upgradeSpeedButton != null) {
@@ -45,10 +50,6 @@ public class UpgradeMenuUI : MonoBehaviour
 
         if (unlockHighlightButton != null) {
             unlockHighlightButton.onClick.AddListener(OnUnlockHighlightClicked);
-        }
-
-        if (panelRoot != null) {
-            panelRoot.SetActive(false);
         }
     }
 
