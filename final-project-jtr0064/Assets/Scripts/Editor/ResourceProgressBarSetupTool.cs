@@ -44,11 +44,7 @@ public class ResourceProgressBarSetupTool : EditorWindow
         Canvas canvas = GetOrCreateCanvas();
         targetCanvas = canvas;
 
-        ResourceCounter resourceCounter = FindObjectOfType<ResourceCounter>();
-        if (resourceCounter == null) {
-            Debug.LogError("Could not find a ResourceCounter component in the scene. Make sure the resource UI is present and the scene is loaded.");
-            return;
-        }
+        ResourceCounter resourceCounter = GetOrCreateResourceCounter(canvas);
 
         RectTransform barRect = GetOrCreateChild(canvas.transform, "ResourceProgressBar");
         barRect.anchorMin = new Vector2(0f, 1f);
@@ -104,6 +100,25 @@ public class ResourceProgressBarSetupTool : EditorWindow
         EditorSceneManager.MarkSceneDirty(resourceCounter.gameObject.scene);
 
         Debug.Log("Resource progress bar setup complete: top-left bar wired to ResourceCounter (fill + percent text update automatically as resources are gathered). Tune colors/size/position to taste, then save the scene.");
+    }
+
+    // ResourceCounter is never placed in the scene by any other tool - DropoffLocation and
+    // this bar both just FindObjectOfType it, so if it's missing the whole banked-resource
+    // tally (and this bar) silently never updates. Create it here so the bar works standalone.
+    // (No per-type apple/ore/poppy text UI is created - that visual is on hold pending a
+    // layout that doesn't collide with the minimap.)
+    private ResourceCounter GetOrCreateResourceCounter(Canvas canvas) {
+        ResourceCounter existing = FindObjectOfType<ResourceCounter>();
+        if (existing != null) {
+            return existing;
+        }
+
+        RectTransform counterRect = GetOrCreateChild(canvas.transform, "ResourceCounter");
+        ResourceCounter counter = GetOrAddComponent<ResourceCounter>(counterRect.gameObject);
+
+        Debug.Log("No ResourceCounter found in the scene - created one on a new \"ResourceCounter\" object under the Canvas.");
+
+        return counter;
     }
 
     private Canvas GetOrCreateCanvas() {
