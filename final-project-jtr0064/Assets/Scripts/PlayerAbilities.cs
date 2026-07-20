@@ -6,9 +6,6 @@ using UnityEngine.InputSystem;
 // same Send Messages convention as PlayerInteraction.OnInteract / PlayerUpgrades.OnToggleMenu.
 public class PlayerAbilities : MonoBehaviour
 {
-    [Tooltip("Seconds between Auto-Collect uses once unlocked.")]
-    public float autoCollectCooldown = 30f;
-
     [Tooltip("Radial (Filled/Radial360) Image that sweeps down as Auto-Collect cools down. 0 = ready, 1 = just used.")]
     public Image autoCollectCooldownFill;
     [Tooltip("Shown while Auto-Collect hasn't been unlocked yet.")]
@@ -18,6 +15,9 @@ public class PlayerAbilities : MonoBehaviour
     private PlayerInteraction interaction;
     private PlayerInventory inventory;
     private float autoCollectReadyTime;
+    // Cooldown duration in effect for the current/last cooldown window, snapshotted at use
+    // time so the fill radial doesn't jump around if the player levels up mid-cooldown.
+    private float currentCooldownDuration;
 
     void Start()
     {
@@ -44,8 +44,8 @@ public class PlayerAbilities : MonoBehaviour
             bool onCooldown = unlocked && remaining > 0f;
 
             autoCollectCooldownFill.gameObject.SetActive(onCooldown);
-            if (onCooldown) {
-                autoCollectCooldownFill.fillAmount = Mathf.Clamp01(remaining / autoCollectCooldown);
+            if (onCooldown && currentCooldownDuration > 0f) {
+                autoCollectCooldownFill.fillAmount = Mathf.Clamp01(remaining / currentCooldownDuration);
             }
         }
     }
@@ -75,7 +75,8 @@ public class PlayerAbilities : MonoBehaviour
             return;
         }
 
-        autoCollectReadyTime = Time.time + autoCollectCooldown;
+        currentCooldownDuration = playerUpgrades.GetAutoCollectCooldown();
+        autoCollectReadyTime = Time.time + currentCooldownDuration;
 
         if (interaction != null) {
             interaction.ShowGatherPopup(resourceName);
@@ -83,9 +84,10 @@ public class PlayerAbilities : MonoBehaviour
     }
 
     // Scene-wide version of PlayerInteraction.FindNearbyResource's nearest-match search,
-    // without the interactionRange limit - Auto-Collect can reach anywhere on the map.
+    // capped to the current Auto-Collect range (unlimited once that hits level 10).
     private InteractableResource FindClosestResource()
     {
+        float range = playerUpgrades.GetAutoCollectRange();
         InteractableResource[] resources = FindObjectsByType<InteractableResource>(FindObjectsSortMode.None);
         InteractableResource closest = null;
         float closestDistance = Mathf.Infinity;
@@ -96,7 +98,7 @@ public class PlayerAbilities : MonoBehaviour
             }
 
             float distance = Vector3.Distance(transform.position, resource.transform.position);
-            if (distance < closestDistance) {
+            if (distance <= range && distance < closestDistance) {
                 closestDistance = distance;
                 closest = resource;
             }

@@ -111,7 +111,7 @@ public class UpgradeMenuUI : MonoBehaviour
             return;
         }
 
-        playerUpgrades.UnlockAutoCollect();
+        playerUpgrades.UpgradeAutoCollect();
         RefreshUI();
     }
 
@@ -122,56 +122,76 @@ public class UpgradeMenuUI : MonoBehaviour
         }
 
         int points = playerPoints != null ? playerPoints.points : 0;
-        bool canAfford = points >= PlayerUpgrades.upgradeCost;
 
         if (pointsLabel != null) {
             pointsLabel.text = "Points: " + points;
         }
 
+        int maxLevel = PlayerUpgrades.maxLevel;
+
+        bool speedMaxed = playerUpgrades.speedLevel >= maxLevel;
+        int speedCost = playerUpgrades.GetNextSpeedCost();
         if (speedLabel != null) {
-            speedLabel.text = "Speed Lv. " + playerUpgrades.speedLevel +
+            speedLabel.text = "Speed Lv. " + playerUpgrades.speedLevel + "/" + maxLevel +
                 "  (Move " + controller.MoveSpeed.ToString("F1") +
                 " / Sprint " + controller.SprintSpeed.ToString("F1") + ")" +
-                "  - " + PlayerUpgrades.upgradeCost + " pts";
+                (speedMaxed ? "  - MAX" : "  - " + speedCost + " pts");
         }
 
         if (upgradeSpeedButton != null) {
-            upgradeSpeedButton.interactable = canAfford;
+            upgradeSpeedButton.interactable = !speedMaxed && points >= speedCost;
         }
 
         PlayerInteraction interaction = playerUpgrades.GetComponent<PlayerInteraction>();
 
+        bool gatherMaxed = playerUpgrades.gatherLevel >= maxLevel;
+        int gatherCost = playerUpgrades.GetNextGatherCost();
         if (gatherLabel != null) {
             float range = interaction != null ? interaction.interactionRange : 0f;
-            gatherLabel.text = "Gather Distance Lv. " + playerUpgrades.gatherLevel +
+            gatherLabel.text = "Gather Distance Lv. " + playerUpgrades.gatherLevel + "/" + maxLevel +
                 "  (" + range.ToString("F1") + "m)" +
-                "  - " + PlayerUpgrades.upgradeCost + " pts";
+                (gatherMaxed ? "  - MAX" : "  - " + gatherCost + " pts");
         }
 
         if (upgradeGatherButton != null) {
-            upgradeGatherButton.interactable = canAfford;
+            upgradeGatherButton.interactable = !gatherMaxed && points >= gatherCost;
         }
 
+        bool gatherSpeedMaxed = playerUpgrades.gatherSpeedLevel >= maxLevel;
+        int gatherSpeedCost = playerUpgrades.GetNextGatherSpeedCost();
         if (gatherSpeedLabel != null) {
             float multiplier = interaction != null ? interaction.gatherSpeedMultiplier : 1f;
-            gatherSpeedLabel.text = "Gather Speed Lv. " + playerUpgrades.gatherSpeedLevel +
+            gatherSpeedLabel.text = "Gather Speed Lv. " + playerUpgrades.gatherSpeedLevel + "/" + maxLevel +
                 "  (" + multiplier.ToString("F2") + "x)" +
-                "  - " + PlayerUpgrades.upgradeCost + " pts";
+                (gatherSpeedMaxed ? "  - MAX" : "  - " + gatherSpeedCost + " pts");
         }
 
         if (upgradeGatherSpeedButton != null) {
-            upgradeGatherSpeedButton.interactable = canAfford;
+            upgradeGatherSpeedButton.interactable = !gatherSpeedMaxed && points >= gatherSpeedCost;
         }
 
         bool autoCollectUnlocked = playerUpgrades.autoCollectLevel > 0;
+        bool autoCollectMaxed = playerUpgrades.autoCollectLevel >= maxLevel;
+        int autoCollectCost = playerUpgrades.GetNextAutoCollectCost();
 
         if (autoCollectLabel != null) {
-            autoCollectLabel.text = "Auto-Collect: " + (autoCollectUnlocked ? "Unlocked" : "Locked") +
-                (autoCollectUnlocked ? "" : "  - " + PlayerUpgrades.upgradeCost + " pts");
+            string status;
+            if (!autoCollectUnlocked) {
+                status = "Locked";
+            } else if (autoCollectMaxed) {
+                status = "unlimited range, " + playerUpgrades.GetAutoCollectCooldown().ToString("F0") + "s cooldown";
+            } else {
+                status = playerUpgrades.GetAutoCollectRange().ToString("F0") + "m range, " +
+                    playerUpgrades.GetAutoCollectCooldown().ToString("F0") + "s cooldown";
+            }
+
+            autoCollectLabel.text = "Auto-Collect Lv. " + playerUpgrades.autoCollectLevel + "/" + maxLevel +
+                "  (" + status + ")" +
+                (autoCollectMaxed ? "  - MAX" : "  - " + autoCollectCost + " pts");
         }
 
         if (unlockAutoCollectButton != null) {
-            unlockAutoCollectButton.interactable = !autoCollectUnlocked && canAfford;
+            unlockAutoCollectButton.interactable = !autoCollectMaxed && points >= autoCollectCost;
         }
     }
 }
