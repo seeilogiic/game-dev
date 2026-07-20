@@ -183,18 +183,20 @@ public class DropoffSetupTool : EditorWindow
         }
     }
 
+    // Sits directly under the top-left ResourceProgressBar (see ResourceProgressBarSetupTool:
+    // bar is anchored top-left at (20, -20) with a height of 24), so this starts at y = -52.
     private CarriedInventoryUI SetupCarriedInventoryUI(Canvas canvas, PlayerInventory inventory) {
         RectTransform carriedRect = GetOrCreateChild(canvas.transform, "CarriedInventoryText");
-        carriedRect.anchorMin = new Vector2(0f, 0f);
-        carriedRect.anchorMax = new Vector2(0f, 0f);
-        carriedRect.pivot = new Vector2(0f, 0f);
-        carriedRect.sizeDelta = new Vector2(420f, 30f);
-        carriedRect.anchoredPosition = new Vector2(20f, 20f);
+        carriedRect.anchorMin = new Vector2(0f, 1f);
+        carriedRect.anchorMax = new Vector2(0f, 1f);
+        carriedRect.pivot = new Vector2(0f, 1f);
+        carriedRect.sizeDelta = new Vector2(420f, 44f);
+        carriedRect.anchoredPosition = new Vector2(20f, -52f);
 
         TextMeshProUGUI carriedText = GetOrAddComponent<TextMeshProUGUI>(carriedRect.gameObject);
         carriedText.fontSize = 16;
         carriedText.color = Color.white;
-        carriedText.alignment = TextAlignmentOptions.Left;
+        carriedText.alignment = TextAlignmentOptions.TopLeft;
 
         CarriedInventoryUI carriedUI = GetOrAddComponent<CarriedInventoryUI>(carriedRect.gameObject);
         SerializedObject serializedCarriedUI = new SerializedObject(carriedUI);

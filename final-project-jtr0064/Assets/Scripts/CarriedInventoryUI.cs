@@ -3,7 +3,8 @@ using TMPro;
 using System.Collections.Generic;
 using System.Text;
 
-// Shows what the player is currently carrying (not yet banked), e.g. "Carrying: Ore x3, Poppy x1".
+// Shows what the player is currently carrying (not yet banked), e.g. "Ore x3, Poppy x1"
+// plus a "5/10 total" line reflecting PlayerInventory's shared carry cap.
 public class CarriedInventoryUI : MonoBehaviour
 {
     public PlayerInventory inventory;
@@ -29,7 +30,8 @@ public class CarriedInventoryUI : MonoBehaviour
             builder.Append(Capitalize(type)).Append(" x").Append(amount);
         }
 
-        carriedText.text = builder.Length > 0 ? "Carrying: " + builder : "";
+        string totalLine = inventory.GetTotalCarried() + "/" + inventory.maxTotalCarry + " total";
+        carriedText.text = builder.Length > 0 ? builder + "\n" + totalLine : totalLine;
     }
 
     private static string Capitalize(string s)
