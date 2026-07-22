@@ -166,5 +166,7 @@ public class NightWisp : MonoBehaviour
         hitPoints.RemovePoints(pointsStolen);
         onCooldown = true;
         cooldownTimer = hitCooldown;
+
+        SfxManager.Instance?.PlayWispHit();
     }
 }

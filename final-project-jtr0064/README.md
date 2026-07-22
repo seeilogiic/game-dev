@@ -90,3 +90,6 @@ Below is a list of external packages, assets, and resources utilized in this pro
   - [Nature Night Forest with Frogs and Crickets](https://pixabay.com/sound-effects/nature-night-forest-with-frogs-and-crickets-for-sleep-451153/) - Night ambient sound effect.
   - [Nature Forest Daytime](https://pixabay.com/sound-effects/nature-forest-daytime-446356/) - Day ambient sound effect.
   - [Meditative/Spiritual Atmospheric Documentary Music](https://pixabay.com/music/meditationspiritual-atmospheric-documentary-509386/) - Game background music track.
+- **[Hints, Stars, Points & Rewards Sound Effects Lite Pack](https://assetstore.unity.com/packages/audio/sound-fx/hints-stars-points-rewards-sound-effects-lite-pack-295538)**: SFX pack - "Bell Star 2" for gathering resources, "Coin Bag Reward" for depositing at dropoffs, "Harp Money 1" for purchasing upgrades.
+- **[Fantasy Harp Album - 010118](https://assetstore.unity.com/packages/audio/music/fantasy-harp-album-010118-108939)**: "Frost Village" - nighttime background music track.
+- **[Joyful Countryside Loop \[j220722\]](https://assetstore.unity.com/packages/audio/music/pop/free-joyful-countryside-loop-j220722-230028)**: Daytime background music track.

@@ -30,6 +30,7 @@ public class IntroScreenUI : MonoBehaviour
 
     private void Dismiss()
     {
+        SfxManager.Instance?.PlayUiClick();
         gameObject.SetActive(false);
         SetPlayerControlActive(true);
     }

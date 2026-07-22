@@ -1,0 +1,29 @@
+fileFormatVersion: 2
+guid: 0729adcd696b8d944bcae18c75283434
+timeCreated: 1515579900
+licenseType: Store
+AudioImporter:
+  serializedVersion: 6
+  defaultSettings:
+    loadType: 0
+    sampleRateSetting: 0
+    sampleRateOverride: 44100
+    compressionFormat: 1
+    quality: 1
+    conversionMode: 0
+  platformSettingOverrides: {}
+  forceToMono: 0
+  normalize: 1
+  preloadAudioData: 1
+  loadInBackground: 0
+  3D: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 108939
+  packageName: Fantasy Harp Album - 010118
+  packageVersion: 1.0
+  assetPath: Assets/Fantasy Harp Album - 010118/wav - 1411k/2. Mysterious Fairy.wav
+  uploadId: 223224

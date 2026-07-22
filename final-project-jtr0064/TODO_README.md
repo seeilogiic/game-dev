@@ -21,7 +21,10 @@ Notes on what's still unfinished after Checkpoint 2 submission.
 - Planned: quick / medium / long timed game modes, selectable by the player.
 - The number of items to collect should scale based on which mode is selected.
 
-## Day/night cycle
-- `DayNightCycle` day/night lengths are currently set to 20s/20s (both the script
-  defaults and the `SampleScene` inspector values) for fast fog testing. Revert to the
-  real values (240s day / 60s night) before submission.
+## Dropoff art (in progress)
+- Real dropoff meshes are being wired in from an imported props pack; see
+  `DropoffSetupTool.cs`'s prefab-override slots.
+
+## Audio
+- Gather/deposit/upgrade SFX (`SfxManager.cs`) and day/night music tracks are wired in with
+  real clips. Still no clips assigned for the Wisp Hit / UI Click slots on SfxManager.

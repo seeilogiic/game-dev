@@ -238,6 +238,7 @@ public class PlayerInteraction : MonoBehaviour
             bool gathered = resource.Interact(inventory);
             if (gathered) {
                 ShowGatherPopup(resourceName);
+                SfxManager.Instance?.PlayGather();
             } else {
                 ShowMessagePopup(resourceName + " inventory full");
             }

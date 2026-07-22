@@ -87,13 +87,18 @@ public class UpgradeMenuUI : MonoBehaviour
         }
     }
 
+    // Each handler plays the upgrade SFX only on a successful purchase (not on a failed
+    // click, e.g. insufficient points) - that also stands in as this button's click feedback,
+    // so it doesn't also fire the generic UI click sound.
     private void OnUpgradeSpeedClicked()
     {
         if (playerUpgrades == null) {
             return;
         }
 
-        playerUpgrades.UpgradeSpeed();
+        if (playerUpgrades.UpgradeSpeed()) {
+            SfxManager.Instance?.PlayUpgrade();
+        }
         RefreshUI();
     }
 
@@ -103,7 +108,9 @@ public class UpgradeMenuUI : MonoBehaviour
             return;
         }
 
-        playerUpgrades.UpgradeGatherDistance();
+        if (playerUpgrades.UpgradeGatherDistance()) {
+            SfxManager.Instance?.PlayUpgrade();
+        }
         RefreshUI();
     }
 
@@ -113,7 +120,9 @@ public class UpgradeMenuUI : MonoBehaviour
             return;
         }
 
-        playerUpgrades.UpgradeGatherSpeed();
+        if (playerUpgrades.UpgradeGatherSpeed()) {
+            SfxManager.Instance?.PlayUpgrade();
+        }
         RefreshUI();
     }
 
@@ -123,7 +132,9 @@ public class UpgradeMenuUI : MonoBehaviour
             return;
         }
 
-        playerUpgrades.UpgradeAutoCollect();
+        if (playerUpgrades.UpgradeAutoCollect()) {
+            SfxManager.Instance?.PlayUpgrade();
+        }
         RefreshUI();
     }
 
@@ -133,7 +144,9 @@ public class UpgradeMenuUI : MonoBehaviour
             return;
         }
 
-        playerUpgrades.UpgradeHighlight();
+        if (playerUpgrades.UpgradeHighlight()) {
+            SfxManager.Instance?.PlayUpgrade();
+        }
         RefreshUI();
     }
 

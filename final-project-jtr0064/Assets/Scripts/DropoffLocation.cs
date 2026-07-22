@@ -39,6 +39,8 @@ public class DropoffLocation : MonoBehaviour
 
         inventory.Consume(acceptedResourceType, amount);
 
+        SfxManager.Instance?.PlayDeposit();
+
         return amount;
     }
 }

@@ -145,6 +145,7 @@ public class PlayerAbilities : MonoBehaviour
         if (interaction != null) {
             interaction.ShowGatherPopup(resourceName);
         }
+        SfxManager.Instance?.PlayGather();
     }
 
     // Scene-wide version of PlayerInteraction.FindNearbyResource's nearest-match search,

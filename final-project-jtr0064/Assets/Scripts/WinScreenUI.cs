@@ -33,6 +33,7 @@ public class WinScreenUI : MonoBehaviour
 
     private void Restart()
     {
+        SfxManager.Instance?.PlayUiClick();
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
