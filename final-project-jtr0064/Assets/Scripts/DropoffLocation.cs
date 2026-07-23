@@ -5,8 +5,8 @@ using UnityEngine;
 // PlayerPoints point per resource deposited.
 public class DropoffLocation : MonoBehaviour
 {
-    [Tooltip("Resource type this dropoff accepts, matched like ResourceCounter (\"apple\", \"ore\", \"poppy\").")]
-    public string acceptedResourceType = "ore";
+    [Tooltip("Resource type this dropoff accepts, matched like ResourceCounter (\"tree\", \"hay\", \"grass\").")]
+    public string acceptedResourceType = "hay";
 
     private ResourceCounter resourceCounter;
 

@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using TMPro;
 
-// Generates the Apple/Ore/Poppy dropoff prefabs (each with DropoffLocation already attached
+// Generates the Tree/Hay/Grass dropoff prefabs (each with DropoffLocation already attached
 // and configured) and wires up PlayerInventory + the carried-resources UI. Placing the
 // prefabs on the terrain is a manual step - drag them into Tools > Terrain > Resource Scatter
 // Tool (Amount 1-3 per type is plenty; dropoffs are meant to be sparse, unlike gatherable
@@ -16,9 +16,9 @@ public class DropoffSetupTool : EditorWindow
     private Canvas targetCanvas;
 
     // Leave a prefab slot empty to auto-generate a colored placeholder for that type.
-    private GameObject applePrefabOverride;
-    private GameObject orePrefabOverride;
-    private GameObject poppyPrefabOverride;
+    private GameObject treePrefabOverride;
+    private GameObject hayPrefabOverride;
+    private GameObject grassPrefabOverride;
 
     private const string PrefabFolder = "Assets/Prefabs/Dropoffs";
 
@@ -50,9 +50,9 @@ public class DropoffSetupTool : EditorWindow
         GUILayout.Space(8);
         GUILayout.Label("Dropoff Prefabs (optional - leave empty to auto-generate a placeholder)", EditorStyles.boldLabel);
 
-        applePrefabOverride = (GameObject)EditorGUILayout.ObjectField("Apple Dropoff Prefab", applePrefabOverride, typeof(GameObject), false);
-        orePrefabOverride = (GameObject)EditorGUILayout.ObjectField("Ore Dropoff Prefab", orePrefabOverride, typeof(GameObject), false);
-        poppyPrefabOverride = (GameObject)EditorGUILayout.ObjectField("Poppy Dropoff Prefab", poppyPrefabOverride, typeof(GameObject), false);
+        treePrefabOverride = (GameObject)EditorGUILayout.ObjectField("Tree Dropoff Prefab", treePrefabOverride, typeof(GameObject), false);
+        hayPrefabOverride = (GameObject)EditorGUILayout.ObjectField("Hay Dropoff Prefab", hayPrefabOverride, typeof(GameObject), false);
+        grassPrefabOverride = (GameObject)EditorGUILayout.ObjectField("Grass Dropoff Prefab", grassPrefabOverride, typeof(GameObject), false);
 
         GUILayout.Space(8);
 
@@ -77,9 +77,9 @@ public class DropoffSetupTool : EditorWindow
         Canvas canvas = GetOrCreateCanvas();
         targetCanvas = canvas;
 
-        GameObject applePrefab = GetOrCreatePlaceholderPrefab("apple", applePrefabOverride);
-        GameObject orePrefab = GetOrCreatePlaceholderPrefab("ore", orePrefabOverride);
-        GameObject poppyPrefab = GetOrCreatePlaceholderPrefab("poppy", poppyPrefabOverride);
+        GameObject treePrefab = GetOrCreatePlaceholderPrefab("tree", treePrefabOverride);
+        GameObject hayPrefab = GetOrCreatePlaceholderPrefab("hay", hayPrefabOverride);
+        GameObject grassPrefab = GetOrCreatePlaceholderPrefab("grass", grassPrefabOverride);
 
         CarriedInventoryUI carriedUI = SetupCarriedInventoryUI(canvas, inventory);
 
@@ -87,7 +87,7 @@ public class DropoffSetupTool : EditorWindow
         EditorUtility.SetDirty(carriedUI);
         EditorSceneManager.MarkSceneDirty(playerObject.scene);
 
-        Debug.Log("Dropoff setup complete: PlayerInventory wired onto the player, a \"Carrying: ...\" label was added to the canvas, and Dropoff_Apple/Ore/Poppy prefabs are ready at " + PrefabFolder + ". Use Tools > Terrain > Resource Scatter Tool to place them (small Amount per type).");
+        Debug.Log("Dropoff setup complete: PlayerInventory wired onto the player, a \"Carrying: ...\" label was added to the canvas, and Dropoff_Tree/Hay/Grass prefabs are ready at " + PrefabFolder + ". Use Tools > Terrain > Resource Scatter Tool to place them (small Amount per type).");
     }
 
     private GameObject GetOrCreatePlaceholderPrefab(string resourceType, GameObject overridePrefab) {
@@ -156,12 +156,12 @@ public class DropoffSetupTool : EditorWindow
 
     private Color GetColorForType(string resourceType) {
         switch (resourceType.ToLower()) {
-            case "ore":
-                return new Color(0.55f, 0.55f, 0.6f);
-            case "poppy":
-                return new Color(0.9f, 0.25f, 0.55f);
-            case "apple":
-                return new Color(0.8f, 0.15f, 0.15f);
+            case "hay":
+                return new Color(0.85f, 0.7f, 0.25f);
+            case "grass":
+                return new Color(0.35f, 0.75f, 0.3f);
+            case "tree":
+                return new Color(0.4f, 0.25f, 0.1f);
             default:
                 return Color.white;
         }

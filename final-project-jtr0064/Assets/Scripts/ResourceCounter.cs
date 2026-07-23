@@ -1,24 +1,28 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Serialization;
 using TMPro;
 
 public class ResourceCounter : MonoBehaviour
 {
-    public TextMeshProUGUI appleText;
-    public TextMeshProUGUI oreText;
-    public TextMeshProUGUI poppyText;
+    [FormerlySerializedAs("appleText")]
+    public TextMeshProUGUI treeText;
+    [FormerlySerializedAs("oreText")]
+    public TextMeshProUGUI hayText;
+    [FormerlySerializedAs("poppyText")]
+    public TextMeshProUGUI grassText;
 
     public Image progressFillImage;
     public TextMeshProUGUI progressPercentText;
 
     public WinScreenUI winScreenUI;
 
-    private int apples;
-    private int ores;
-    private int poppies;
-    private int totalApples;
-    private int totalOres;
-    private int totalPoppies;
+    private int trees;
+    private int hay;
+    private int grass;
+    private int totalTrees;
+    private int totalHay;
+    private int totalGrass;
     private bool hasWon;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -36,9 +40,9 @@ public class ResourceCounter : MonoBehaviour
 
     private void CalculateTotals()
     {
-        totalApples = 0;
-        totalOres = 0;
-        totalPoppies = 0;
+        totalTrees = 0;
+        totalHay = 0;
+        totalGrass = 0;
 
         InteractableResource[] resources = FindObjectsOfType<InteractableResource>();
         foreach (InteractableResource resource in resources)
@@ -48,38 +52,38 @@ public class ResourceCounter : MonoBehaviour
             string type = resource.resourceName.ToLower();
             int amount = resource.usesRemaining * resource.amountPerCollect;
 
-            if (type == "apple")
+            if (type == "tree")
             {
-                totalApples += amount;
+                totalTrees += amount;
             }
-            else if (type == "ore")
+            else if (type == "hay")
             {
-                totalOres += amount;
+                totalHay += amount;
             }
-            else if (type == "poppy" || type == "poppies")
+            else if (type == "grass")
             {
-                totalPoppies += amount;
+                totalGrass += amount;
             }
         }
     }
 
     private void UpdateUI()
     {
-        if (appleText != null)
+        if (treeText != null)
         {
-            appleText.text = "Apples: " + apples + "/" + totalApples;
+            treeText.text = "Trees: " + trees + "/" + totalTrees;
         }
-        if (oreText != null)
+        if (hayText != null)
         {
-            oreText.text = "Ores: " + ores + "/" + totalOres;
+            hayText.text = "Hay: " + hay + "/" + totalHay;
         }
-        if (poppyText != null)
+        if (grassText != null)
         {
-            poppyText.text = "Poppies: " + poppies + "/" + totalPoppies;
+            grassText.text = "Grass: " + grass + "/" + totalGrass;
         }
 
-        int totalCollected = apples + ores + poppies;
-        int totalAvailable = totalApples + totalOres + totalPoppies;
+        int totalCollected = trees + hay + grass;
+        int totalAvailable = totalTrees + totalHay + totalGrass;
         float fraction = totalAvailable > 0 ? (float)totalCollected / totalAvailable : 0f;
 
         if (progressFillImage != null)
@@ -105,15 +109,14 @@ public class ResourceCounter : MonoBehaviour
     {
         switch (resourceType.ToLower())
         {
-            case "apple":
-                apples += amount;
+            case "tree":
+                trees += amount;
                 break;
-            case "ore":
-                ores += amount;
+            case "hay":
+                hay += amount;
                 break;
-            case "poppy":
-            case "poppies":
-                poppies += amount;
+            case "grass":
+                grass += amount;
                 break;
             default:
                 Debug.LogWarning("Unknown resource type: " + resourceType);

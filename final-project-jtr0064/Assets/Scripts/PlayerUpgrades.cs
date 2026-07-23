@@ -4,8 +4,8 @@ using StarterAssets;
 
 public class PlayerUpgrades : MonoBehaviour
 {
-    // All upgrades share the same 10-level cap and cost curve: 1, 2, 4, 8, 16, 32, 64,
-    // 128, 256, 512 to go from level 0->1, 1->2, ... 9->10.
+    // All upgrades share the same 10-level cap and cost curve: 1, 2, 5, 10, 20, 30, 40,
+    // 50, 75, 100 to go from level 0->1, 1->2, ... 9->10.
     public const int maxLevel = 10;
 
     [Header("Speed - Sprint reaches maxSprintSpeed at level 10; Move scales with the same ratio")]
@@ -84,10 +84,12 @@ public class PlayerUpgrades : MonoBehaviour
         ApplyGatherDistance();
     }
 
-    // Cost to go from `level` to `level + 1`: 2^level, i.e. 1, 2, 4, ... 512.
+    private static readonly int[] upgradeCosts = { 1, 2, 5, 10, 20, 30, 40, 50, 75, 100 };
+
+    // Cost to go from `level` to `level + 1`, indexed 0..9 for levels 0->1 ... 9->10.
     public static int GetUpgradeCost(int level)
     {
-        return 1 << level;
+        return upgradeCosts[Mathf.Clamp(level, 0, upgradeCosts.Length - 1)];
     }
 
     public int GetNextSpeedCost() => GetUpgradeCost(speedLevel);

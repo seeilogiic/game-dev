@@ -29,9 +29,9 @@ public static class ResourceCounterCleanupTool
         for (int i = 1; i < counters.Length; i++) {
             ResourceCounter duplicate = counters[i];
 
-            if (keeper.appleText == null) keeper.appleText = duplicate.appleText;
-            if (keeper.oreText == null) keeper.oreText = duplicate.oreText;
-            if (keeper.poppyText == null) keeper.poppyText = duplicate.poppyText;
+            if (keeper.treeText == null) keeper.treeText = duplicate.treeText;
+            if (keeper.hayText == null) keeper.hayText = duplicate.hayText;
+            if (keeper.grassText == null) keeper.grassText = duplicate.grassText;
             if (keeper.progressFillImage == null) keeper.progressFillImage = duplicate.progressFillImage;
             if (keeper.progressPercentText == null) keeper.progressPercentText = duplicate.progressPercentText;
             if (keeper.winScreenUI == null) keeper.winScreenUI = duplicate.winScreenUI;

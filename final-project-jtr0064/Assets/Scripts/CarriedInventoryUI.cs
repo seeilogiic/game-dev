@@ -3,13 +3,13 @@ using TMPro;
 using System.Collections.Generic;
 using System.Text;
 
-// Shows what the player is currently carrying (not yet banked), e.g. "Ore x3, Poppy x1"
+// Shows what the player is currently carrying (not yet banked), e.g. "Hay x3, Grass x1"
 // plus a "5/10 total" line reflecting PlayerInventory's shared carry cap.
 public class CarriedInventoryUI : MonoBehaviour
 {
     public PlayerInventory inventory;
     public TextMeshProUGUI carriedText;
-    public string[] displayedResourceTypes = new string[] { "apple", "ore", "poppy" };
+    public string[] displayedResourceTypes = new string[] { "tree", "hay", "grass" };
 
     void Update()
     {

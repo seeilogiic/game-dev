@@ -105,7 +105,7 @@ public class ResourceProgressBarSetupTool : EditorWindow
     // ResourceCounter is never placed in the scene by any other tool - DropoffLocation and
     // this bar both just FindObjectOfType it, so if it's missing the whole banked-resource
     // tally (and this bar) silently never updates. Create it here so the bar works standalone.
-    // (No per-type apple/ore/poppy text UI is created - that visual is on hold pending a
+    // (No per-type tree/hay/grass text UI is created - that visual is on hold pending a
     // layout that doesn't collide with the minimap.)
     private ResourceCounter GetOrCreateResourceCounter(Canvas canvas) {
         ResourceCounter existing = FindObjectOfType<ResourceCounter>();
