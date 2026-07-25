@@ -4,7 +4,7 @@ using UnityEngine;
 // occasionally stolen by hazards like NightWisp.
 public class PlayerPoints : MonoBehaviour
 {
-    public int points;
+    public int points = 1000;
 
     public void AddPoints(int amount)
     {

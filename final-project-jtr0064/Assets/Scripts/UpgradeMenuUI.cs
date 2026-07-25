@@ -12,11 +12,17 @@ public class UpgradeMenuUI : MonoBehaviour
     public TextMeshProUGUI gatherSpeedLabel;
     public TextMeshProUGUI autoCollectLabel;
     public TextMeshProUGUI highlightLabel;
+    public TextMeshProUGUI capacityLabel;
+    public TextMeshProUGUI autoDropoffLabel;
+    public TextMeshProUGUI dropoffHighlightLabel;
     public Button upgradeSpeedButton;
     public Button upgradeGatherButton;
     public Button upgradeGatherSpeedButton;
     public Button unlockAutoCollectButton;
     public Button unlockHighlightButton;
+    public Button upgradeCapacityButton;
+    public Button unlockAutoDropoffButton;
+    public Button unlockDropoffHighlightButton;
 
     public PlayerUpgrades playerUpgrades;
     public PlayerPoints playerPoints;
@@ -51,6 +57,18 @@ public class UpgradeMenuUI : MonoBehaviour
 
         if (unlockHighlightButton != null) {
             unlockHighlightButton.onClick.AddListener(OnUnlockHighlightClicked);
+        }
+
+        if (upgradeCapacityButton != null) {
+            upgradeCapacityButton.onClick.AddListener(OnUpgradeCapacityClicked);
+        }
+
+        if (unlockAutoDropoffButton != null) {
+            unlockAutoDropoffButton.onClick.AddListener(OnUnlockAutoDropoffClicked);
+        }
+
+        if (unlockDropoffHighlightButton != null) {
+            unlockDropoffHighlightButton.onClick.AddListener(OnUnlockDropoffHighlightClicked);
         }
     }
 
@@ -145,6 +163,42 @@ public class UpgradeMenuUI : MonoBehaviour
         }
 
         if (playerUpgrades.UpgradeHighlight()) {
+            SfxManager.Instance?.PlayUpgrade();
+        }
+        RefreshUI();
+    }
+
+    private void OnUpgradeCapacityClicked()
+    {
+        if (playerUpgrades == null) {
+            return;
+        }
+
+        if (playerUpgrades.UpgradeCapacity()) {
+            SfxManager.Instance?.PlayUpgrade();
+        }
+        RefreshUI();
+    }
+
+    private void OnUnlockAutoDropoffClicked()
+    {
+        if (playerUpgrades == null) {
+            return;
+        }
+
+        if (playerUpgrades.UpgradeAutoDropoff()) {
+            SfxManager.Instance?.PlayUpgrade();
+        }
+        RefreshUI();
+    }
+
+    private void OnUnlockDropoffHighlightClicked()
+    {
+        if (playerUpgrades == null) {
+            return;
+        }
+
+        if (playerUpgrades.UpgradeDropoffHighlight()) {
             SfxManager.Instance?.PlayUpgrade();
         }
         RefreshUI();
@@ -251,6 +305,63 @@ public class UpgradeMenuUI : MonoBehaviour
 
         if (unlockHighlightButton != null) {
             unlockHighlightButton.interactable = !highlightMaxed && points >= highlightCost;
+        }
+
+        PlayerInventory inventory = playerUpgrades.GetComponent<PlayerInventory>();
+
+        bool capacityMaxed = playerUpgrades.capacityLevel >= maxLevel;
+        int capacityCost = playerUpgrades.GetNextCapacityCost();
+        if (capacityLabel != null) {
+            int capacity = inventory != null ? inventory.maxTotalCarry : 0;
+            capacityLabel.text = "Inventory Capacity Lv. " + playerUpgrades.capacityLevel + "/" + maxLevel +
+                "  (" + capacity + ")" +
+                (capacityMaxed ? "  - MAX" : "  - " + capacityCost + " pts");
+        }
+
+        if (upgradeCapacityButton != null) {
+            upgradeCapacityButton.interactable = !capacityMaxed && points >= capacityCost;
+        }
+
+        bool autoDropoffUnlocked = playerUpgrades.autoDropoffLevel > 0;
+        bool autoDropoffMaxed = playerUpgrades.autoDropoffLevel >= maxLevel;
+        int autoDropoffCost = playerUpgrades.GetNextAutoDropoffCost();
+
+        if (autoDropoffLabel != null) {
+            string status = !autoDropoffUnlocked
+                ? "Locked"
+                : "unlimited range, " + playerUpgrades.GetAutoDropoffCooldown().ToString("F0") + "s cooldown";
+
+            autoDropoffLabel.text = "Auto-Dropoff Lv. " + playerUpgrades.autoDropoffLevel + "/" + maxLevel +
+                "  (" + status + ")" +
+                (autoDropoffMaxed ? "  - MAX" : "  - " + autoDropoffCost + " pts");
+        }
+
+        if (unlockAutoDropoffButton != null) {
+            unlockAutoDropoffButton.interactable = !autoDropoffMaxed && points >= autoDropoffCost;
+        }
+
+        bool dropoffHighlightUnlocked = playerUpgrades.dropoffHighlightLevel > 0;
+        bool dropoffHighlightMaxed = playerUpgrades.dropoffHighlightLevel >= maxLevel;
+        int dropoffHighlightCost = playerUpgrades.GetNextDropoffHighlightCost();
+
+        if (dropoffHighlightLabel != null) {
+            string status;
+            if (!dropoffHighlightUnlocked) {
+                status = "Locked";
+            } else if (dropoffHighlightMaxed) {
+                status = "always on";
+            } else {
+                status = playerUpgrades.GetDropoffHighlightDuration().ToString("F0") + "s active, " +
+                    playerUpgrades.GetDropoffHighlightCooldown().ToString("F0") + "s cooldown";
+            }
+
+            dropoffHighlightLabel.text = "Dropoff Highlight Lv. " + playerUpgrades.dropoffHighlightLevel + "/" + maxLevel +
+                "  (" + status + ")" +
+                (dropoffHighlightMaxed ? "  - MAX" : "  - " + dropoffHighlightCost + " pts");
+        }
+
+        if (unlockDropoffHighlightButton != null) {
+            unlockDropoffHighlightButton.interactable = !dropoffHighlightMaxed && points >= dropoffHighlightCost;
         }
     }
 }

@@ -13,7 +13,7 @@ public static class UIStyle
     public static readonly Color PanelBackground = new Color(0.078f, 0.086f, 0.109f, 0.92f);   // #14161C @ 0.92
     public static readonly Color RowBackground = new Color(1f, 1f, 1f, 0.05f);
     public static readonly Color Divider = new Color(1f, 1f, 1f, 0.14f);
-    public static readonly Color Accent = new Color(1f, 0.82f, 0.302f, 1f);                     // #FFD24D, matches ResourceHighlightRing gold
+    public static readonly Color Accent = new Color(1f, 0.82f, 0.302f, 1f);                     // #FFD24D, matches HighlightRing gold
     public static readonly Color TextPrimary = new Color(0.949f, 0.953f, 0.961f, 1f);            // #F2F3F5
     public static readonly Color TextSecondary = new Color(0.663f, 0.690f, 0.741f, 1f);          // #A9B0BD
     public static readonly Color ButtonNormal = new Color(1f, 0.82f, 0.302f, 0.18f);

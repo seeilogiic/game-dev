@@ -1,7 +1,8 @@
 // Flat-color unlit shader that always passes the depth test, so it draws through walls
-// and the resource's own mesh. Used by ResourceHighlightRing for Ability Two (Highlight) -
-// the whole point of that ability is to show the player where nearby resources are, so the
-// glow shouldn't be hidden just because its hitbox sits inside the visible model.
+// and the target's own mesh. Used by HighlightRing for Ability Two (item Highlight, gold) and
+// Ability Four (Dropoff Highlight, light blue) - the whole point of these abilities is to show
+// the player where nearby resources/dropoffs are, so the glow shouldn't be hidden just because
+// its hitbox sits inside the visible model.
 Shader "Custom/HighlightXRay"
 {
     Properties

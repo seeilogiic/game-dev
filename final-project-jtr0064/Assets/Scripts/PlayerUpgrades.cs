@@ -29,20 +29,38 @@ public class PlayerUpgrades : MonoBehaviour
     public float highlightLevel1Duration = 2f;
     public float highlightLevel10Duration = 10f;
 
+    [Header("Inventory Capacity - reaches maxCarryCapacity at level 10")]
+    public int maxCarryCapacity = 100;
+
+    [Header("Auto-Dropoff - locked until level 1; deposits carried resources at any range; cooldown shrinks evenly from level 1 to level 10")]
+    public float autoDropoffLevel1Cooldown = 30f;
+    public float autoDropoffLevel10Cooldown = 5f;
+
+    [Header("Dropoff Highlight - locked until level 1; cooldown shrinks and active duration grows evenly from level 1 to level 10; stays on permanently at level 10")]
+    public float dropoffHighlightLevel1Cooldown = 60f;
+    public float dropoffHighlightLevel10Cooldown = 10f;
+    public float dropoffHighlightLevel1Duration = 2f;
+    public float dropoffHighlightLevel10Duration = 10f;
+
     public int speedLevel;
     public int gatherLevel;
     public int gatherSpeedLevel;
     public int autoCollectLevel;
     public int highlightLevel;
+    public int capacityLevel;
+    public int autoDropoffLevel;
+    public int dropoffHighlightLevel;
 
     private float baseMoveSpeed;
     private float baseSprintSpeed;
     private float baseGatherRange;
     private float baseGatherSpeedMultiplier;
+    private int baseCarryCapacity;
 
     private ThirdPersonController controller;
     private PlayerInteraction interaction;
     private PlayerPoints points;
+    private PlayerInventory inventory;
     private DayNightCycle dayNightCycle;
     private bool wasFoggy;
 
@@ -51,6 +69,7 @@ public class PlayerUpgrades : MonoBehaviour
         controller = GetComponent<ThirdPersonController>();
         interaction = GetComponent<PlayerInteraction>();
         points = GetComponent<PlayerPoints>();
+        inventory = GetComponent<PlayerInventory>();
         dayNightCycle = FindFirstObjectByType<DayNightCycle>();
 
         // Capture whatever's set in the inspector as the level-0 baseline, then apply
@@ -63,10 +82,14 @@ public class PlayerUpgrades : MonoBehaviour
             baseGatherRange = interaction.interactionRange;
             baseGatherSpeedMultiplier = interaction.gatherSpeedMultiplier;
         }
+        if (inventory != null) {
+            baseCarryCapacity = inventory.maxTotalCarry;
+        }
 
         ApplySpeed();
         ApplyGatherDistance();
         ApplyGatherSpeed();
+        ApplyCapacity();
     }
 
     void Update()
@@ -97,6 +120,9 @@ public class PlayerUpgrades : MonoBehaviour
     public int GetNextGatherSpeedCost() => GetUpgradeCost(gatherSpeedLevel);
     public int GetNextAutoCollectCost() => GetUpgradeCost(autoCollectLevel);
     public int GetNextHighlightCost() => GetUpgradeCost(highlightLevel);
+    public int GetNextCapacityCost() => GetUpgradeCost(capacityLevel);
+    public int GetNextAutoDropoffCost() => GetUpgradeCost(autoDropoffLevel);
+    public int GetNextDropoffHighlightCost() => GetUpgradeCost(dropoffHighlightLevel);
 
     public bool UpgradeSpeed()
     {
@@ -156,6 +182,40 @@ public class PlayerUpgrades : MonoBehaviour
         return true;
     }
 
+    public bool UpgradeCapacity()
+    {
+        if (inventory == null || points == null || capacityLevel >= maxLevel
+            || !points.TrySpend(GetUpgradeCost(capacityLevel))) {
+            return false;
+        }
+
+        capacityLevel++;
+        ApplyCapacity();
+        return true;
+    }
+
+    public bool UpgradeAutoDropoff()
+    {
+        if (points == null || autoDropoffLevel >= maxLevel
+            || !points.TrySpend(GetUpgradeCost(autoDropoffLevel))) {
+            return false;
+        }
+
+        autoDropoffLevel++;
+        return true;
+    }
+
+    public bool UpgradeDropoffHighlight()
+    {
+        if (points == null || dropoffHighlightLevel >= maxLevel
+            || !points.TrySpend(GetUpgradeCost(dropoffHighlightLevel))) {
+            return false;
+        }
+
+        dropoffHighlightLevel++;
+        return true;
+    }
+
     private void ApplySpeed()
     {
         if (controller == null || baseSprintSpeed <= 0f) {
@@ -187,6 +247,16 @@ public class PlayerUpgrades : MonoBehaviour
 
         float t = gatherSpeedLevel / (float)maxLevel;
         interaction.gatherSpeedMultiplier = Mathf.Lerp(baseGatherSpeedMultiplier, maxGatherSpeedMultiplier, t);
+    }
+
+    private void ApplyCapacity()
+    {
+        if (inventory == null) {
+            return;
+        }
+
+        float t = capacityLevel / (float)maxLevel;
+        inventory.maxTotalCarry = Mathf.RoundToInt(Mathf.Lerp(baseCarryCapacity, maxCarryCapacity, t));
     }
 
     // 0 while locked; grows evenly from autoCollectLevel1Range (level 1) to
@@ -239,6 +309,44 @@ public class PlayerUpgrades : MonoBehaviour
 
         float t = (highlightLevel - 1) / (float)(maxLevel - 1);
         return Mathf.Lerp(highlightLevel1Duration, highlightLevel10Duration, t);
+    }
+
+    // Shrinks evenly from autoDropoffLevel1Cooldown (level 1) to autoDropoffLevel10Cooldown
+    // (level 10). Range is unlimited at every unlocked level - only the cooldown improves.
+    public float GetAutoDropoffCooldown()
+    {
+        if (autoDropoffLevel <= 0) {
+            return autoDropoffLevel1Cooldown;
+        }
+
+        float t = (autoDropoffLevel - 1) / (float)(maxLevel - 1);
+        return Mathf.Lerp(autoDropoffLevel1Cooldown, autoDropoffLevel10Cooldown, t);
+    }
+
+    // Shrinks evenly from dropoffHighlightLevel1Cooldown (level 1) to
+    // dropoffHighlightLevel10Cooldown (level 10). Unused at level 10 since the highlight is
+    // simply left on permanently.
+    public float GetDropoffHighlightCooldown()
+    {
+        if (dropoffHighlightLevel <= 0) {
+            return dropoffHighlightLevel1Cooldown;
+        }
+
+        float t = (dropoffHighlightLevel - 1) / (float)(maxLevel - 1);
+        return Mathf.Lerp(dropoffHighlightLevel1Cooldown, dropoffHighlightLevel10Cooldown, t);
+    }
+
+    // Grows evenly from dropoffHighlightLevel1Duration (level 1) to
+    // dropoffHighlightLevel10Duration (level 10); at level 10 PlayerAbilities ignores this and
+    // leaves the highlight on permanently instead of timing it out.
+    public float GetDropoffHighlightDuration()
+    {
+        if (dropoffHighlightLevel <= 0) {
+            return dropoffHighlightLevel1Duration;
+        }
+
+        float t = (dropoffHighlightLevel - 1) / (float)(maxLevel - 1);
+        return Mathf.Lerp(dropoffHighlightLevel1Duration, dropoffHighlightLevel10Duration, t);
     }
 
     public void OnToggleMenu(InputValue value)

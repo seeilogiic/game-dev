@@ -22,7 +22,7 @@ public class AbilityBarSetupTool : EditorWindow
     }
 
     private void OnGUI() {
-        GUILayout.Label("Setup Ability Bar (1 = Auto-Collect, 2 = Highlight)", EditorStyles.boldLabel);
+        GUILayout.Label("Setup Ability Bar (1 = Auto-Collect, 2 = Highlight, 3 = Auto-Dropoff, 4 = Dropoff Highlight)", EditorStyles.boldLabel);
 
         targetCanvas = (Canvas)EditorGUILayout.ObjectField(
             "Target Canvas",
@@ -64,6 +64,8 @@ public class AbilityBarSetupTool : EditorWindow
         // than reuse slots left over from an older version of this tool.
         DestroyIfExists(canvas.transform, "AbilitySlot1");
         DestroyIfExists(canvas.transform, "AbilitySlot2");
+        DestroyIfExists(canvas.transform, "AbilitySlot3");
+        DestroyIfExists(canvas.transform, "AbilitySlot4");
 
         // Bottom-left, clear of the bottom-center "[E] gather" prompt and the bottom-right
         // menu hint. Slots sit side by side, left to right, 8px apart.
@@ -71,18 +73,24 @@ public class AbilityBarSetupTool : EditorWindow
         const float gap = 8f;
         Image slot1Cooldown = BuildSlot(canvas.transform, "AbilitySlot1", "1", new Vector2(20f, 30f), out GameObject slot1Locked);
         Image slot2Cooldown = BuildSlot(canvas.transform, "AbilitySlot2", "2", new Vector2(20f + slotSize + gap, 30f), out GameObject slot2Locked);
+        Image slot3Cooldown = BuildSlot(canvas.transform, "AbilitySlot3", "3", new Vector2(20f + (slotSize + gap) * 2f, 30f), out GameObject slot3Locked);
+        Image slot4Cooldown = BuildSlot(canvas.transform, "AbilitySlot4", "4", new Vector2(20f + (slotSize + gap) * 3f, 30f), out GameObject slot4Locked);
 
         SerializedObject serializedAbilities = new SerializedObject(abilities);
         serializedAbilities.FindProperty("autoCollectCooldownFill").objectReferenceValue = slot1Cooldown;
         serializedAbilities.FindProperty("autoCollectLockedOverlay").objectReferenceValue = slot1Locked;
         serializedAbilities.FindProperty("highlightCooldownFill").objectReferenceValue = slot2Cooldown;
         serializedAbilities.FindProperty("highlightLockedOverlay").objectReferenceValue = slot2Locked;
+        serializedAbilities.FindProperty("autoDropoffCooldownFill").objectReferenceValue = slot3Cooldown;
+        serializedAbilities.FindProperty("autoDropoffLockedOverlay").objectReferenceValue = slot3Locked;
+        serializedAbilities.FindProperty("dropoffHighlightCooldownFill").objectReferenceValue = slot4Cooldown;
+        serializedAbilities.FindProperty("dropoffHighlightLockedOverlay").objectReferenceValue = slot4Locked;
         serializedAbilities.ApplyModifiedProperties();
 
         EditorUtility.SetDirty(abilities);
         EditorSceneManager.MarkSceneDirty(playerObject.scene);
 
-        Debug.Log("Ability bar setup complete. Press 1 for Auto-Collect, 2 for Highlight, once each is unlocked.");
+        Debug.Log("Ability bar setup complete. Press 1 for Auto-Collect, 2 for Highlight, 3 for Auto-Dropoff, 4 for Dropoff Highlight, once each is unlocked.");
     }
 
     // Builds one ability slot (backing image, keycap label, radial cooldown fill, locked

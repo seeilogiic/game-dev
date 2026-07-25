@@ -3,8 +3,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
 
-// Number-key abilities (1, 2, 3, 4...). Auto-Collect on "1", Highlight on "2", following the
-// same Send Messages convention as PlayerInteraction.OnInteract / PlayerUpgrades.OnToggleMenu.
+// Number-key abilities (1, 2, 3, 4...). Auto-Collect on "1", Highlight on "2", Auto-Dropoff on
+// "3", Dropoff Highlight on "4", following the same Send Messages convention as
+// PlayerInteraction.OnInteract / PlayerUpgrades.OnToggleMenu.
 public class PlayerAbilities : MonoBehaviour
 {
     [Tooltip("Radial (Filled/Radial360) Image that sweeps down as Auto-Collect cools down. 0 = ready, 1 = just used.")]
@@ -16,6 +17,16 @@ public class PlayerAbilities : MonoBehaviour
     public Image highlightCooldownFill;
     [Tooltip("Shown while Highlight hasn't been unlocked yet.")]
     public GameObject highlightLockedOverlay;
+
+    [Tooltip("Radial (Filled/Radial360) Image that sweeps down as Auto-Dropoff cools down. 0 = ready, 1 = just used.")]
+    public Image autoDropoffCooldownFill;
+    [Tooltip("Shown while Auto-Dropoff hasn't been unlocked yet.")]
+    public GameObject autoDropoffLockedOverlay;
+
+    [Tooltip("Radial (Filled/Radial360) Image that sweeps down as Dropoff Highlight cools down. 0 = ready, 1 = just used.")]
+    public Image dropoffHighlightCooldownFill;
+    [Tooltip("Shown while Dropoff Highlight hasn't been unlocked yet.")]
+    public GameObject dropoffHighlightLockedOverlay;
 
     private PlayerUpgrades playerUpgrades;
     private PlayerInteraction interaction;
@@ -32,6 +43,16 @@ public class PlayerAbilities : MonoBehaviour
     private float nextPermanentHighlightScan;
     private readonly List<GameObject> activeHighlightRings = new List<GameObject>();
 
+    private float autoDropoffReadyTime;
+    private float currentAutoDropoffCooldownDuration;
+
+    private float dropoffHighlightReadyTime;
+    private float currentDropoffHighlightCooldown;
+    private float dropoffHighlightActiveUntil;
+    private bool dropoffHighlightPermanentlyOn;
+    private float nextPermanentDropoffHighlightScan;
+    private readonly List<GameObject> activeDropoffHighlightRings = new List<GameObject>();
+
     void Start()
     {
         playerUpgrades = GetComponent<PlayerUpgrades>();
@@ -46,6 +67,16 @@ public class PlayerAbilities : MonoBehaviour
         if (highlightCooldownFill != null) {
             highlightCooldownFill.fillAmount = 0f;
             highlightCooldownFill.gameObject.SetActive(false);
+        }
+
+        if (autoDropoffCooldownFill != null) {
+            autoDropoffCooldownFill.fillAmount = 0f;
+            autoDropoffCooldownFill.gameObject.SetActive(false);
+        }
+
+        if (dropoffHighlightCooldownFill != null) {
+            dropoffHighlightCooldownFill.fillAmount = 0f;
+            dropoffHighlightCooldownFill.gameObject.SetActive(false);
         }
     }
 
@@ -67,7 +98,24 @@ public class PlayerAbilities : MonoBehaviour
             }
         }
 
+        bool autoDropoffUnlocked = playerUpgrades != null && playerUpgrades.autoDropoffLevel > 0;
+
+        if (autoDropoffLockedOverlay != null) {
+            autoDropoffLockedOverlay.SetActive(!autoDropoffUnlocked);
+        }
+
+        if (autoDropoffCooldownFill != null) {
+            float remaining = Mathf.Max(0f, autoDropoffReadyTime - Time.time);
+            bool onCooldown = autoDropoffUnlocked && remaining > 0f;
+
+            autoDropoffCooldownFill.gameObject.SetActive(onCooldown);
+            if (onCooldown && currentAutoDropoffCooldownDuration > 0f) {
+                autoDropoffCooldownFill.fillAmount = Mathf.Clamp01(remaining / currentAutoDropoffCooldownDuration);
+            }
+        }
+
         UpdateHighlight();
+        UpdateDropoffHighlight();
     }
 
     private void UpdateHighlight()
@@ -110,6 +158,50 @@ public class PlayerAbilities : MonoBehaviour
             highlightCooldownFill.gameObject.SetActive(onCooldown);
             if (onCooldown && currentHighlightCooldown > 0f) {
                 highlightCooldownFill.fillAmount = Mathf.Clamp01(remaining / currentHighlightCooldown);
+            }
+        }
+    }
+
+    private void UpdateDropoffHighlight()
+    {
+        bool dropoffHighlightUnlocked = playerUpgrades != null && playerUpgrades.dropoffHighlightLevel > 0;
+        bool dropoffHighlightMaxed = playerUpgrades != null && playerUpgrades.dropoffHighlightLevel >= PlayerUpgrades.maxLevel;
+
+        if (dropoffHighlightLockedOverlay != null) {
+            dropoffHighlightLockedOverlay.SetActive(!dropoffHighlightUnlocked);
+        }
+
+        if (dropoffHighlightUnlocked && dropoffHighlightMaxed) {
+            // Level 10: the highlight is simply left on forever - no key press, cooldown, or
+            // duration needed anymore.
+            if (!dropoffHighlightPermanentlyOn) {
+                dropoffHighlightPermanentlyOn = true;
+                ClearDropoffHighlights();
+            }
+
+            if (Time.time >= nextPermanentDropoffHighlightScan) {
+                RefreshPermanentDropoffHighlights();
+                nextPermanentDropoffHighlightScan = Time.time + 1f;
+            }
+        } else {
+            if (dropoffHighlightPermanentlyOn) {
+                dropoffHighlightPermanentlyOn = false;
+                ClearDropoffHighlights();
+            }
+
+            if (dropoffHighlightActiveUntil > 0f && Time.time >= dropoffHighlightActiveUntil) {
+                dropoffHighlightActiveUntil = 0f;
+                ClearDropoffHighlights();
+            }
+        }
+
+        if (dropoffHighlightCooldownFill != null) {
+            float remaining = Mathf.Max(0f, dropoffHighlightReadyTime - Time.time);
+            bool onCooldown = dropoffHighlightUnlocked && !dropoffHighlightMaxed && remaining > 0f;
+
+            dropoffHighlightCooldownFill.gameObject.SetActive(onCooldown);
+            if (onCooldown && currentDropoffHighlightCooldown > 0f) {
+                dropoffHighlightCooldownFill.fillAmount = Mathf.Clamp01(remaining / currentDropoffHighlightCooldown);
             }
         }
     }
@@ -208,7 +300,7 @@ public class PlayerAbilities : MonoBehaviour
                 continue;
             }
 
-            ResourceHighlightRing ring = ResourceHighlightRing.Attach(resource.transform);
+            HighlightRing ring = HighlightRing.Attach(resource.transform, HighlightRing.GoldColor);
             activeHighlightRings.Add(ring.gameObject);
         }
     }
@@ -224,11 +316,11 @@ public class PlayerAbilities : MonoBehaviour
                 continue;
             }
 
-            if (resource.GetComponentInChildren<ResourceHighlightRing>() != null) {
+            if (resource.GetComponentInChildren<HighlightRing>() != null) {
                 continue;
             }
 
-            ResourceHighlightRing ring = ResourceHighlightRing.Attach(resource.transform);
+            HighlightRing ring = HighlightRing.Attach(resource.transform, HighlightRing.GoldColor);
             activeHighlightRings.Add(ring.gameObject);
         }
     }
@@ -242,5 +334,115 @@ public class PlayerAbilities : MonoBehaviour
         }
 
         activeHighlightRings.Clear();
+    }
+
+    public void OnAbilityThree(InputValue value)
+    {
+        if (!value.isPressed) {
+            return;
+        }
+
+        if (playerUpgrades == null || playerUpgrades.autoDropoffLevel <= 0) {
+            return;
+        }
+
+        if (Time.time < autoDropoffReadyTime) {
+            return;
+        }
+
+        if (inventory == null || inventory.GetTotalCarried() <= 0) {
+            return;
+        }
+
+        // Unlimited distance by design - unlike Auto-Collect, this doesn't scale a range with
+        // level, it just deposits into every matching dropoff in the scene regardless of
+        // proximity. DropoffLocation.Deposit already plays the deposit SFX per type.
+        DropoffLocation[] dropoffs = FindObjectsByType<DropoffLocation>(FindObjectsSortMode.None);
+        int totalDeposited = 0;
+        foreach (DropoffLocation dropoff in dropoffs) {
+            if (dropoff == null) {
+                continue;
+            }
+
+            totalDeposited += dropoff.Deposit(inventory);
+        }
+
+        if (totalDeposited <= 0) {
+            return;
+        }
+
+        currentAutoDropoffCooldownDuration = playerUpgrades.GetAutoDropoffCooldown();
+        autoDropoffReadyTime = Time.time + currentAutoDropoffCooldownDuration;
+    }
+
+    public void OnAbilityFour(InputValue value)
+    {
+        if (!value.isPressed) {
+            return;
+        }
+
+        if (playerUpgrades == null || playerUpgrades.dropoffHighlightLevel <= 0) {
+            return;
+        }
+
+        // Already on permanently at level 10 - nothing left for the key press to do.
+        if (playerUpgrades.dropoffHighlightLevel >= PlayerUpgrades.maxLevel) {
+            return;
+        }
+
+        if (Time.time < dropoffHighlightReadyTime) {
+            return;
+        }
+
+        SpawnDropoffHighlights();
+        dropoffHighlightActiveUntil = Time.time + playerUpgrades.GetDropoffHighlightDuration();
+
+        currentDropoffHighlightCooldown = playerUpgrades.GetDropoffHighlightCooldown();
+        dropoffHighlightReadyTime = Time.time + currentDropoffHighlightCooldown;
+    }
+
+    private void SpawnDropoffHighlights()
+    {
+        ClearDropoffHighlights();
+
+        DropoffLocation[] dropoffs = FindObjectsByType<DropoffLocation>(FindObjectsSortMode.None);
+        foreach (DropoffLocation dropoff in dropoffs) {
+            if (dropoff == null) {
+                continue;
+            }
+
+            HighlightRing ring = HighlightRing.Attach(dropoff.transform, HighlightRing.LightBlueColor);
+            activeDropoffHighlightRings.Add(ring.gameObject);
+        }
+    }
+
+    // Level 10 only: adds rings to any dropoff that doesn't already have one, rather than
+    // tearing down and rebuilding every dropoff's ring every second.
+    private void RefreshPermanentDropoffHighlights()
+    {
+        DropoffLocation[] dropoffs = FindObjectsByType<DropoffLocation>(FindObjectsSortMode.None);
+        foreach (DropoffLocation dropoff in dropoffs) {
+            if (dropoff == null) {
+                continue;
+            }
+
+            if (dropoff.GetComponentInChildren<HighlightRing>() != null) {
+                continue;
+            }
+
+            HighlightRing ring = HighlightRing.Attach(dropoff.transform, HighlightRing.LightBlueColor);
+            activeDropoffHighlightRings.Add(ring.gameObject);
+        }
+    }
+
+    private void ClearDropoffHighlights()
+    {
+        foreach (GameObject ring in activeDropoffHighlightRings) {
+            if (ring != null) {
+                Destroy(ring);
+            }
+        }
+
+        activeDropoffHighlightRings.Clear();
     }
 }

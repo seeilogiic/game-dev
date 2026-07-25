@@ -68,6 +68,7 @@ public class UpgradeMenuSetupTool : EditorWindow
 
         PlayerUpgrades playerUpgrades = GetOrAddComponent<PlayerUpgrades>(playerObject);
         PlayerPoints playerPoints = GetOrAddComponent<PlayerPoints>(playerObject);
+        PlayerInventory playerInventory = GetOrAddComponent<PlayerInventory>(playerObject);
 
         // The panel hierarchy changed (flat absolute rows -> sectioned layout-group rows), so
         // rebuild it fresh each time rather than trying to patch the old structure in place.
@@ -83,7 +84,9 @@ public class UpgradeMenuSetupTool : EditorWindow
         panelRect.pivot = new Vector2(0.5f, 0.5f);
         // Wide, single-column list (one row per upgrade/ability) rather than a card grid -
         // simpler to lay out correctly and matches the flat style of the intro/win screens.
-        panelRect.sizeDelta = new Vector2(640f, 400f);
+        // Height sized for 4 upgrade rows + 4 ability rows (32px each) plus the title/points/
+        // section headers - grow this if more rows are ever added.
+        panelRect.sizeDelta = new Vector2(640f, 480f);
         panelRect.anchoredPosition = Vector2.zero;
 
         UIStyle.RoundedImage(panel, UIStyle.PanelBackground);
@@ -127,12 +130,15 @@ public class UpgradeMenuSetupTool : EditorWindow
         TextMeshProUGUI speedLabel = CreateUpgradeRow(panelRect, "Speed", "Upgrade Speed", out Button speedButton);
         TextMeshProUGUI gatherLabel = CreateUpgradeRow(panelRect, "Gather", "Upgrade Gather Distance", out Button gatherButton);
         TextMeshProUGUI gatherSpeedLabel = CreateUpgradeRow(panelRect, "GatherSpeed", "Upgrade Gather Speed", out Button gatherSpeedButton);
+        TextMeshProUGUI capacityLabel = CreateUpgradeRow(panelRect, "Capacity", "Upgrade Inventory Capacity", out Button capacityButton);
 
         // --- Abilities section: header + one row per ability ---
         CreateSectionHeader(panelRect, "AbilitiesHeader", "ABILITIES");
 
         TextMeshProUGUI autoCollectLabel = CreateUpgradeRow(panelRect, "AutoCollect", "Unlock Auto-Collect", out Button autoCollectButton);
         TextMeshProUGUI highlightLabel = CreateUpgradeRow(panelRect, "Highlight", "Unlock Highlight", out Button highlightButton);
+        TextMeshProUGUI autoDropoffLabel = CreateUpgradeRow(panelRect, "AutoDropoff", "Unlock Auto-Dropoff", out Button autoDropoffButton);
+        TextMeshProUGUI dropoffHighlightLabel = CreateUpgradeRow(panelRect, "DropoffHighlight", "Unlock Dropoff Highlight", out Button dropoffHighlightButton);
 
         SerializedObject serializedMenu = new SerializedObject(menuUI);
         serializedMenu.FindProperty("panelRoot").objectReferenceValue = panel;
@@ -142,11 +148,17 @@ public class UpgradeMenuSetupTool : EditorWindow
         serializedMenu.FindProperty("gatherSpeedLabel").objectReferenceValue = gatherSpeedLabel;
         serializedMenu.FindProperty("autoCollectLabel").objectReferenceValue = autoCollectLabel;
         serializedMenu.FindProperty("highlightLabel").objectReferenceValue = highlightLabel;
+        serializedMenu.FindProperty("capacityLabel").objectReferenceValue = capacityLabel;
+        serializedMenu.FindProperty("autoDropoffLabel").objectReferenceValue = autoDropoffLabel;
+        serializedMenu.FindProperty("dropoffHighlightLabel").objectReferenceValue = dropoffHighlightLabel;
         serializedMenu.FindProperty("upgradeSpeedButton").objectReferenceValue = speedButton;
         serializedMenu.FindProperty("upgradeGatherButton").objectReferenceValue = gatherButton;
         serializedMenu.FindProperty("upgradeGatherSpeedButton").objectReferenceValue = gatherSpeedButton;
         serializedMenu.FindProperty("unlockAutoCollectButton").objectReferenceValue = autoCollectButton;
         serializedMenu.FindProperty("unlockHighlightButton").objectReferenceValue = highlightButton;
+        serializedMenu.FindProperty("upgradeCapacityButton").objectReferenceValue = capacityButton;
+        serializedMenu.FindProperty("unlockAutoDropoffButton").objectReferenceValue = autoDropoffButton;
+        serializedMenu.FindProperty("unlockDropoffHighlightButton").objectReferenceValue = dropoffHighlightButton;
         serializedMenu.FindProperty("playerUpgrades").objectReferenceValue = playerUpgrades;
         serializedMenu.FindProperty("playerPoints").objectReferenceValue = playerPoints;
         serializedMenu.FindProperty("controller").objectReferenceValue = controller;
@@ -159,6 +171,7 @@ public class UpgradeMenuSetupTool : EditorWindow
         EditorUtility.SetDirty(menuUI);
         EditorUtility.SetDirty(playerUpgrades);
         EditorUtility.SetDirty(playerPoints);
+        EditorUtility.SetDirty(playerInventory);
         EditorSceneManager.MarkSceneDirty(playerObject.scene);
 
         Debug.Log("Upgrade menu setup complete. Press M in Play mode to open it.");
