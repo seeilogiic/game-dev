@@ -222,6 +222,9 @@ public class PlayerAbilities : MonoBehaviour
 
         InteractableResource target = FindClosestResource();
         if (target == null) {
+            if (interaction != null) {
+                interaction.ShowMessagePopup("No resources in range");
+            }
             return;
         }
 
@@ -351,6 +354,9 @@ public class PlayerAbilities : MonoBehaviour
         }
 
         if (inventory == null || inventory.GetTotalCarried() <= 0) {
+            if (interaction != null) {
+                interaction.ShowMessagePopup("Nothing to drop off");
+            }
             return;
         }
 

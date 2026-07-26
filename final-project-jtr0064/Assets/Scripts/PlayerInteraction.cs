@@ -254,7 +254,7 @@ public class PlayerInteraction : MonoBehaviour
         }
     }
 
-    private void ShowMessagePopup(string message)
+    public void ShowMessagePopup(string message)
     {
         if (gatherPopup != null) {
             gatherPopup.ShowMessage(message);
