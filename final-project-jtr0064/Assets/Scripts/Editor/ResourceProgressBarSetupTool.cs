@@ -50,7 +50,7 @@ public class ResourceProgressBarSetupTool : EditorWindow
         barRect.anchorMin = new Vector2(0f, 1f);
         barRect.anchorMax = new Vector2(0f, 1f);
         barRect.pivot = new Vector2(0f, 1f);
-        barRect.sizeDelta = new Vector2(260f, 24f);
+        barRect.sizeDelta = new Vector2(200f, 16f);
         barRect.anchoredPosition = new Vector2(20f, -20f);
 
         RectTransform trackRect = GetOrCreateChild(barRect, "Track");
