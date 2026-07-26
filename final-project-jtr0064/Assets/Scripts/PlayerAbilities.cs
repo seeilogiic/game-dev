@@ -220,17 +220,32 @@ public class PlayerAbilities : MonoBehaviour
             return;
         }
 
-        InteractableResource target = FindClosestResource();
-        if (target == null) {
-            if (interaction != null) {
-                interaction.ShowMessagePopup("No resources in range");
+        // Pulls from up to autoCollectLevel resources per press (1 at level 1, up to 10 at
+        // level 10), stopping early if range or inventory space runs out - Interact() already
+        // returns false without consuming a use when the inventory has no room left.
+        int pullsRemaining = playerUpgrades.autoCollectLevel;
+        Dictionary<string, int> gatheredCounts = new Dictionary<string, int>();
+        string lastAttemptedName = null;
+
+        while (pullsRemaining > 0) {
+            InteractableResource target = FindClosestResource();
+            if (target == null) {
+                break;
             }
-            return;
+
+            lastAttemptedName = target.resourceName;
+            if (!target.Interact(inventory)) {
+                break;
+            }
+
+            gatheredCounts[target.resourceName] = gatheredCounts.TryGetValue(target.resourceName, out int count) ? count + 1 : 1;
+            pullsRemaining--;
         }
 
-        string resourceName = target.resourceName;
-        bool gathered = target.Interact(inventory);
-        if (!gathered) {
+        if (gatheredCounts.Count == 0) {
+            if (interaction != null) {
+                interaction.ShowMessagePopup(lastAttemptedName != null ? lastAttemptedName + " inventory full" : "No resources in range");
+            }
             return;
         }
 
@@ -238,9 +253,18 @@ public class PlayerAbilities : MonoBehaviour
         autoCollectReadyTime = Time.time + currentCooldownDuration;
 
         if (interaction != null) {
-            interaction.ShowGatherPopup(resourceName);
+            interaction.ShowGatherPopup(FormatGatherSummary(gatheredCounts));
         }
         SfxManager.Instance?.PlayGather();
+    }
+
+    private static string FormatGatherSummary(Dictionary<string, int> gatheredCounts)
+    {
+        List<string> parts = new List<string>();
+        foreach (KeyValuePair<string, int> entry in gatheredCounts) {
+            parts.Add(entry.Value > 1 ? entry.Value + " " + entry.Key : entry.Key);
+        }
+        return string.Join(", ", parts);
     }
 
     // Scene-wide version of PlayerInteraction.FindNearbyResource's nearest-match search,
