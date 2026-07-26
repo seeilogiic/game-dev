@@ -18,6 +18,8 @@ clears. The player's overarching goal is to collect 100% of the world's resource
 | Toggle upgrade menu | M |
 | Ability 1 — Auto-Collect | 1 |
 | Ability 2 — Highlight resources | 2 |
+| Ability 3 — Auto-Dropoff | 3 |
+| Ability 4 — Highlight dropoffs | 4 |
 | Cycle camera zoom | Z |
 
 ### Where the project is headed
@@ -31,9 +33,11 @@ collect.
 
 ## Checkpoint 2 Feature Overview
 
-**Interactive/collectible objects:** Apple trees, ore rocks, and poppies
-(`InteractableResource` instances), dropoff points (`DropoffLocation.cs`), and night wisp
-hazards (`NightWisp.cs`).
+**Interactive/collectible objects:** Grass, hay, and two tree variants
+(`InteractableResource` instances — 800 placed in the scene), matching dropoff points
+(`DropoffLocation.cs` — 150 placed), and night wisp hazards (`NightWisp.cs` — 500
+placed). Ore, poppy, and apple `InteractableResource` prefabs also exist under
+`Assets/Prefabs/Resources/` but aren't currently scattered into the scene.
 
 **Interaction systems:**
 - Gather/pickup: `PlayerInteraction.cs` + `InteractableResource.cs` (press E, animation
@@ -41,17 +45,20 @@ hazards (`NightWisp.cs`).
 - Dropoff/banking: `DropoffLocation.cs` moves carried resources into the banked tally and
   awards points.
 - Upgrade spending: `UpgradeMenuUI.cs` / `PlayerUpgrades.cs` (press M), spends points on
-  speed, gather range/speed, and unlocking abilities.
-- Abilities: Auto-Collect (1) and Highlight (2) via `PlayerAbilities.cs`.
+  speed, gather range/speed, carry capacity, and unlocking abilities (10 levels each).
+- Abilities (`PlayerAbilities.cs`): Auto-Collect (1), Highlight resources (2),
+  Auto-Dropoff (3), and Highlight dropoffs (4) — each unlocked and improved via
+  `PlayerUpgrades.cs`, with a per-ability cooldown radial and locked overlay.
 
 **Progress tracking:** `ResourceCounter.cs` tallies collected-vs-total per resource type
 and overall percentage; `PlayerInventory.cs` tracks carried-but-not-yet-banked amounts
-(capped); `PlayerPoints.cs` tracks spendable currency earned from dropoffs.
+(capped); `PlayerPoints.cs` tracks spendable currency earned from dropoffs (starts at 0).
 
 **UI feedback:** Per-type resource counts + an overall progress bar (top-left), a
 carried-inventory readout (`CarriedInventoryUI.cs`), a "Gathered X" popup
 (`GatherPopupUI.cs`), ability cooldown radials + locked overlays, the upgrade menu's
-costs/levels, a compass bar (`CompassMarkerBar.cs`), and a minimap (`MinimapFollow.cs`).
+costs/levels, a compass bar (`CompassMarkerBar.cs`), a minimap (`MinimapFollow.cs`), an
+intro/instructions screen (`IntroScreenUI.cs`), and the win screen (`WinScreenUI.cs`).
 
 **Hazards/challenge systems:**
 - Night wisps: nocturnal hazard that wanders, then chases and steals points on contact;
@@ -62,16 +69,23 @@ costs/levels, a compass bar (`CompassMarkerBar.cs`), and a minimap (`MinimapFoll
   trips to a dropoff point instead of one long gathering run.
 
 **Player/camera improvements:** Z cycles through several camera zoom distances
-(`CameraZoom.cs`).
+(`CameraZoom.cs`); a separate top-down minimap camera follows the player
+(`MinimapFollow.cs`).
 
 **Win condition:** `ResourceCounter` detects when every resource has been both collected
 and deposited and shows `WinScreenUI` — a "You Win!" panel that freezes player control
 (same pattern as the intro/upgrade screens) and offers a Restart button that reloads the
 active scene, resetting all game state.
 
-**Audio:**
+**Audio:** Day/night ambient tracks and a background music loop crossfaded by
+`DayNightMusic.cs`; one-shot SFX (gather, deposit, upgrade purchase) played through the
+central `SfxManager.cs`; StarterAssets stock footstep/landing sounds on the player.
 
-**Visual polish:**
+**Visual polish:** A full day/night cycle driving sun intensity, ambient color, skybox
+tint, and fog (`DayNightCycle.cs`); a particle + light glow on every night wisp; a custom
+x-ray highlight shader (`Assets/Shaders/HighlightXRay.shader`, used by
+`HighlightRing.cs`) for the resource/dropoff highlight abilities; scattered lowpoly
+environment props across a custom terrain.
 
 See `TODO_README.md` for the fuller running list of known placeholders and planned work
 beyond checkpoint 2.
@@ -83,6 +97,7 @@ Below is a list of external packages, assets, and resources utilized in this pro
 
 - **Starter Assets - Third Person Character Controller (URP)**: [Unity Asset Store](https://assetstore.unity.com/packages/essentials/starter-assets-thirdperson-urp-196526) - Base player controller, character setup, and input actions.
 - **Polytope Studio - Lowpoly Environment Nature Free**: [Unity Asset Store](https://assetstore.unity.com/packages/3d/environments/low-poly-environment-nature-free-lowpoly-medieval-fantasy-series-187052) - Environment assets, trees, terrain materials, and rocks.
+- **Pandazole - Farm Ranch Low Poly Pack**: [Unity Asset Store](https://assetstore.unity.com/packages/3d/props/pandazole-farm-ranch-low-poly-pack-206756) - Grass, hay, and tree resource/dropoff models.
 - **Mixamo Animations**:
   - [Pick Fruit Animation](https://www.mixamo.com/#/?page=1&query=pick+fru) - Interaction animation for picking fruit.
   - [Gather Animation](https://www.mixamo.com/#/?page=1&query=gather) - Interaction animation for gathering/picking up items.
