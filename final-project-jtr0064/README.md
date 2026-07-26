@@ -101,6 +101,7 @@ Below is a list of external packages, assets, and resources utilized in this pro
 - **Mixamo Animations**:
   - [Pick Fruit Animation](https://www.mixamo.com/#/?page=1&query=pick+fru) - Interaction animation for picking fruit.
   - [Gather Animation](https://www.mixamo.com/#/?page=1&query=gather) - Interaction animation for gathering/picking up items.
+- **[Mixamo - Pete](https://www.mixamo.com/#/?page=3&type=Character)**: Player character model/skin.
 - **Pixabay Audio Assets**:
   - [Nature Night Forest with Frogs and Crickets](https://pixabay.com/sound-effects/nature-night-forest-with-frogs-and-crickets-for-sleep-451153/) - Night ambient sound effect.
   - [Nature Forest Daytime](https://pixabay.com/sound-effects/nature-forest-daytime-446356/) - Day ambient sound effect.

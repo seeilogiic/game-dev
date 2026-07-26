@@ -4,15 +4,17 @@ using StarterAssets;
 
 public class PlayerUpgrades : MonoBehaviour
 {
-    // All upgrades share the same 10-level cap and cost curve: 1, 2, 5, 10, 20, 30, 40,
-    // 50, 75, 100 to go from level 0->1, 1->2, ... 9->10.
+    // All upgrades share the same 10-level cap and cost curve: 1, 2, 3, ..., 10 to go from
+    // level 0->1, 1->2, ... 9->10.
     public const int maxLevel = 10;
 
     [Header("Speed - Sprint reaches maxSprintSpeed at level 10; Move scales with the same ratio")]
     public float maxSprintSpeed = 30f;
 
-    [Header("Gather Distance - reaches maxGatherRange at level 10")]
-    public float maxGatherRange = 30f;
+    [Header("Gather Distance - grows evenly from gatherLevel1Range (level 1) to gatherLevel9Range (level 9); effectively unlimited at level 10")]
+    public float gatherLevel1Range = 25f;
+    public float gatherLevel9Range = 225f;
+    public float gatherUnlimitedRange = 1000f;
 
     [Header("Gather Speed - reaches maxGatherSpeedMultiplier at level 10")]
     public float maxGatherSpeedMultiplier = 10f;
@@ -107,7 +109,7 @@ public class PlayerUpgrades : MonoBehaviour
         ApplyGatherDistance();
     }
 
-    private static readonly int[] upgradeCosts = { 1, 2, 5, 10, 20, 30, 40, 50, 75, 100 };
+    private static readonly int[] upgradeCosts = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
     // Cost to go from `level` to `level + 1`, indexed 0..9 for levels 0->1 ... 9->10.
     public static int GetUpgradeCost(int level)
@@ -228,6 +230,10 @@ public class PlayerUpgrades : MonoBehaviour
         controller.MoveSpeed = Mathf.Lerp(baseMoveSpeed, baseMoveSpeed * (maxSprintSpeed / baseSprintSpeed), t) * fogMultiplier;
     }
 
+    // 0 while unpurchased (baseGatherRange, whatever's set in the inspector); grows evenly
+    // from gatherLevel1Range (level 1) to gatherLevel9Range (level 9); effectively
+    // unlimited (gatherUnlimitedRange) at level 10 - not a literal Infinity since this
+    // value feeds Physics.OverlapSphere every frame in PlayerInteraction.
     private void ApplyGatherDistance()
     {
         if (interaction == null) {
@@ -235,8 +241,16 @@ public class PlayerUpgrades : MonoBehaviour
         }
 
         float fogMultiplier = (dayNightCycle != null && dayNightCycle.IsFoggy) ? 0.5f : 1f;
-        float t = gatherLevel / (float)maxLevel;
-        interaction.interactionRange = Mathf.Lerp(baseGatherRange, maxGatherRange, t) * fogMultiplier;
+        float range;
+        if (gatherLevel <= 0) {
+            range = baseGatherRange;
+        } else if (gatherLevel >= maxLevel) {
+            range = gatherUnlimitedRange;
+        } else {
+            float t = (gatherLevel - 1) / (float)(maxLevel - 2);
+            range = Mathf.Lerp(gatherLevel1Range, gatherLevel9Range, t);
+        }
+        interaction.interactionRange = range * fogMultiplier;
     }
 
     private void ApplyGatherSpeed()

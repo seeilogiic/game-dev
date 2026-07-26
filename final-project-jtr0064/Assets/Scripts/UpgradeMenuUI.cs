@@ -236,9 +236,10 @@ public class UpgradeMenuUI : MonoBehaviour
         bool gatherMaxed = playerUpgrades.gatherLevel >= maxLevel;
         int gatherCost = playerUpgrades.GetNextGatherCost();
         if (gatherLabel != null) {
-            float range = interaction != null ? interaction.interactionRange : 0f;
+            string rangeText = gatherMaxed ? "unlimited" :
+                (interaction != null ? interaction.interactionRange.ToString("F1") + "m" : "0.0m");
             gatherLabel.text = "Gather Distance Lv. " + playerUpgrades.gatherLevel + "/" + maxLevel +
-                "  (" + range.ToString("F1") + "m)" +
+                "  (" + rangeText + ")" +
                 (gatherMaxed ? "  - MAX" : "  - " + gatherCost + " pts");
         }
 
