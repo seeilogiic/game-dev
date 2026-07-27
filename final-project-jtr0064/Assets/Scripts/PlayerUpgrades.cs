@@ -20,8 +20,8 @@ public class PlayerUpgrades : MonoBehaviour
     public float maxGatherSpeedMultiplier = 10f;
 
     [Header("Auto-Collect - locked until level 1; range grows evenly from level 1 to level 9, then goes unlimited at level 10; cooldown shrinks evenly from level 1 to level 10")]
-    public float autoCollectLevel1Range = 10f;
-    public float autoCollectLevel9Range = 90f;
+    public float autoCollectLevel1Range = 25f;
+    public float autoCollectLevel9Range = 225f;
     public float autoCollectLevel1Cooldown = 30f;
     public float autoCollectLevel10Cooldown = 5f;
 

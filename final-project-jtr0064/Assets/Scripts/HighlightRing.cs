@@ -142,18 +142,27 @@ public class HighlightRing : MonoBehaviour
         MeshRenderer meshRenderer = GetComponent<MeshRenderer>();
 
         // The X-ray shader draws through walls and the target's own mesh, which is the
-        // point of this ability. Fall back to a normal occludable transparent material if
-        // it's ever missing so Highlight still does something rather than erroring out.
-        Shader shader = Shader.Find("Custom/HighlightXRay");
-        if (shader != null) {
-            material = new Material(shader);
+        // point of this ability. Fall back to a normal occludable transparent material, and
+        // then to whatever built-in shader is guaranteed to exist, if either is ever missing
+        // (e.g. stripped from a build for not being referenced by any Material asset) so
+        // Highlight still does something rather than erroring out and killing the whole
+        // ability call before its cooldown gets set.
+        Shader xrayShader = Shader.Find("Custom/HighlightXRay");
+        if (xrayShader != null) {
+            material = new Material(xrayShader);
         } else {
-            material = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
-            ConfigureTransparent(material);
+            Shader fallbackShader = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Sprites/Default");
+            if (fallbackShader != null) {
+                material = new Material(fallbackShader);
+                ConfigureTransparent(material);
+            }
         }
-        material.SetColor("_BaseColor", color);
 
-        meshRenderer.material = material;
+        if (material != null) {
+            material.SetColor("_BaseColor", color);
+            meshRenderer.material = material;
+        }
+
         meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         meshRenderer.receiveShadows = false;
     }
